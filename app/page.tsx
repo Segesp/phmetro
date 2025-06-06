@@ -20,7 +20,7 @@ export default function Dashboard() {
       .channel('ph_readings')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'ph_readings' },
-        (payload) => {
+        (payload: any) => {
           setReadings(prev => [payload.new as PhReading, ...prev].slice(0, 100))
           setCurrentPh((payload.new as PhReading).ph)
         }
