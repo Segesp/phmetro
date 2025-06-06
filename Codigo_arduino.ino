@@ -4,7 +4,7 @@
 
 const char* ssid       = "SEGOVIA3";
 const char* password   = "76840574";
-const char* serverUrl  = "https://p-h-iota.vercel.app/api/ph-data"; // Dominio real
+const char* serverUrl  = "https://TU-PROYECTO.vercel.app/api/ph-data"; // ⚠️ CAMBIAR DESPUÉS DEL DESPLIEGUE
 
 const int phPin = A0; // Pin analógico donde está conectado el sensor de pH
 
