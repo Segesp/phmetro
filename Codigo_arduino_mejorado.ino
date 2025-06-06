@@ -18,9 +18,9 @@ const int adcMin = 0;                    // Valor ADC mínimo (0V)
 const int adcMax = 1023;                 // Valor ADC máximo (3.3V en ESP8266)
 
 // ========== CONFIGURACIÓN TIMING ==========
-const unsigned long sendInterval = 30000;  // Intervalo de envío en ms (30 segundos)
+const unsigned long sendInterval = 15000;  // Intervalo de envío en ms (15 segundos para pruebas)
 const int maxRetries = 3;                   // Máximo número de reintentos
-const int retryDelay = 5000;                // Delay entre reintentos en ms
+const int retryDelay = 3000;                // Delay entre reintentos en ms (reducido para pruebas)
 
 // ========== VARIABLES GLOBALES ==========
 WiFiClient wifiClient;
@@ -30,9 +30,14 @@ int consecutiveErrors = 0;
 void setup() {
   Serial.begin(115200);
   Serial.println("\n=== INICIANDO pH METRO ESP8266 ===");
+  Serial.println("🧪 MODO SIMULACIÓN ACTIVADO");
+  Serial.println("📊 Generando datos de prueba sintéticos");
   
-  // Configurar pin del sensor
+  // Configurar pin del sensor (aunque no se use en simulación)
   pinMode(phPin, INPUT);
+  
+  // Inicializar generador de números aleatorios
+  randomSeed(analogRead(A0) + millis());
   
   // Conectar a WiFi
   connectToWiFi();
@@ -43,6 +48,7 @@ void setup() {
   Serial.println(" segundos");
   Serial.print("Servidor: ");
   Serial.println(serverUrl);
+  Serial.println("🔬 Datos de pH simulados - Rango: 6.0-8.5");
 }
 
 void loop() {
@@ -60,7 +66,8 @@ void loop() {
       
       if (success) {
         consecutiveErrors = 0;
-        Serial.println("✅ Datos enviados exitosamente");
+        Serial.println("✅ DATOS SIMULADOS enviados exitosamente");
+        printSimulationStatus();
       } else {
         consecutiveErrors++;
         Serial.print("❌ Error enviando datos. Errores consecutivos: ");
@@ -116,27 +123,44 @@ void connectToWiFi() {
 }
 
 float readPH() {
-  // Tomar múltiples lecturas para mayor precisión
-  long total = 0;
-  const int samples = 10;
+  // ========== MODO SIMULACIÓN - DATOS DE PRUEBA ==========
+  // Generar datos de pH simulados que varían de forma realista
   
-  for (int i = 0; i < samples; i++) {
-    total += analogRead(phPin);
-    delay(10);
+  static float basePH = 7.0;  // pH base
+  static unsigned long lastChange = 0;
+  static float trend = 0.0;
+  
+  unsigned long currentTime = millis();
+  
+  // Cambiar la tendencia cada 2 minutos
+  if (currentTime - lastChange > 120000) {
+    trend = (random(-30, 31) / 100.0); // Cambio entre -0.3 y +0.3
+    lastChange = currentTime;
   }
   
-  float avgReading = total / (float)samples;
+  // Simular variaciones naturales
+  float timeVariation = sin(currentTime / 30000.0) * 0.2;  // Variación temporal
+  float randomNoise = (random(-10, 11) / 100.0);           // Ruido aleatorio ±0.1
   
-  // Convertir lectura ADC a pH
-  // NOTA: Esta fórmula puede necesitar calibración según tu sensor específico
-  float phValue = map(avgReading, adcMin, adcMax, phMin * 100, phMax * 100) / 100.0;
+  // Calcular pH simulado
+  float simulatedPH = basePH + trend + timeVariation + randomNoise;
   
-  Serial.print("📊 Lectura ADC: ");
-  Serial.print(avgReading);
+  // Mantener en rango realista (6.0 - 8.5)
+  simulatedPH = constrain(simulatedPH, 6.0, 8.5);
+  
+  // Simular lectura ADC para mostrar en logs
+  float simulatedADC = map(simulatedPH * 100, phMin * 100, phMax * 100, adcMin, adcMax);
+  
+  Serial.print("🧪 SIMULACIÓN - ADC: ");
+  Serial.print(simulatedADC, 0);
   Serial.print(" → pH: ");
-  Serial.println(phValue, 2);
+  Serial.print(simulatedPH, 2);
+  Serial.print(" (tendencia: ");
+  Serial.print(trend > 0 ? "+" : "");
+  Serial.print(trend, 2);
+  Serial.println(")");
   
-  return phValue;
+  return simulatedPH;
 }
 
 bool isValidPH(float ph) {
@@ -167,14 +191,14 @@ bool sendPhData(float phValue) {
     http.addHeader("User-Agent", "ESP8266-pH-Sensor/1.0");
     http.setTimeout(10000); // Timeout de 10 segundos
     
-    // Construir JSON
+    // Construir JSON con datos de simulación
     String json = "{\"ph\":";
     json += String(phValue, 2);
     json += ",\"timestamp\":\"";
     json += getISOTime();
-    json += "\",\"device\":\"ESP8266\",\"sensor\":\"pH\"}";
+    json += "\",\"device\":\"ESP8266\",\"sensor\":\"pH_simulado\",\"mode\":\"simulation\",\"test\":true}";
     
-    Serial.print("📤 JSON: ");
+    Serial.print("📤 JSON (SIMULACIÓN): ");
     Serial.println(json);
     
     // Enviar datos
@@ -238,4 +262,30 @@ void printSystemInfo() {
   Serial.print(ESP.getFreeSketchSpace());
   Serial.println(" bytes");
   Serial.println("================================\n");
+}
+
+// Función para mostrar estado de la simulación
+void printSimulationStatus() {
+  static int dataCount = 0;
+  dataCount++;
+  
+  Serial.print("🧪 Datos simulados enviados: ");
+  Serial.println(dataCount);
+  Serial.print("📊 Próxima lectura en: ");
+  Serial.print(sendInterval / 1000);
+  Serial.println(" segundos");
+}
+
+// Función para generar escenarios específicos de pH (opcional)
+float getScenarioPH(int scenario) {
+  switch(scenario) {
+    case 1: // pH ácido
+      return 6.2 + (random(0, 31) / 100.0); // 6.2 - 6.5
+    case 2: // pH neutro  
+      return 6.8 + (random(0, 41) / 100.0); // 6.8 - 7.2
+    case 3: // pH básico
+      return 7.8 + (random(0, 51) / 100.0); // 7.8 - 8.3
+    default:
+      return 7.0 + (random(-50, 51) / 100.0); // 6.5 - 7.5
+  }
 }
