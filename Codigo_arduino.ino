@@ -4,7 +4,7 @@
 
 const char* ssid       = "SEGOVIA3";
 const char* password   = "76840574";
-const char* serverUrl  = "https://TU-PROYECTO.vercel.app/api/ph-data"; // ⚠️ CAMBIAR DESPUÉS DEL DESPLIEGUE
+const char* serverUrl  = "https://phmetro-p5w79503p-segesps-projects.vercel.app/api/ph-data"; // ✅ URL ACTUALIZADA
 
 const int phPin = A0; // Pin analógico donde está conectado el sensor de pH
 
