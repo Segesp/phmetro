@@ -5,13 +5,12 @@ import { supabase, PhReading } from '@/lib/supabase'
 import PhChart from '@/components/PhChart'
 import StatsCards from '@/components/StatsCards'
 import RecentReadings from '@/components/RecentReadings'
-import { Activity, Droplets, TrendingUp, AlertTriangle, Database } from 'lucide-react'
+import { Activity, Droplets, TrendingUp, AlertTriangle } from 'lucide-react'
 
 export default function Dashboard() {
   const [readings, setReadings] = useState<PhReading[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPh, setCurrentPh] = useState<number | null>(null)
-  const [isUsingMockData, setIsUsingMockData] = useState(false)
 
   useEffect(() => {
     fetchReadings()
@@ -24,7 +23,6 @@ export default function Dashboard() {
         (payload: any) => {
           setReadings(prev => [payload.new as PhReading, ...prev].slice(0, 100))
           setCurrentPh((payload.new as PhReading).ph)
-          setIsUsingMockData(false)
         }
       )
       .subscribe()
@@ -34,12 +32,12 @@ export default function Dashboard() {
     }
   }, [])
 
-  const generateSampleData = (): PhReading[] => {
-    // Generar datos de ejemplo para las últimas horas
-    const sampleData: PhReading[] = []
+  const generateSampleData = async () => {
+    // Generar datos de ejemplo para los últimos 7 días
+    const sampleData = []
     const now = new Date()
     
-    for (let i = 0; i < 48; i++) {
+    for (let i = 0; i < 50; i++) {
       const timestamp = new Date(now.getTime() - (i * 30 * 60 * 1000)) // Cada 30 minutos
       const baseTime = timestamp.getHours() + timestamp.getMinutes() / 60
       
@@ -48,42 +46,13 @@ export default function Dashboard() {
       ph = Math.max(6.0, Math.min(8.5, ph)) // Mantener en rango realista
       
       sampleData.push({
-        id: `demo-${i}`,
         ph: Math.round(ph * 100) / 100,
-        timestamp: timestamp.toISOString(),
+        temperature: Math.round((22 + Math.random() * 6) * 10) / 10,
         created_at: timestamp.toISOString()
       })
     }
     
     return sampleData.reverse() // Ordenar cronológicamente
-  }
-
-  const addMockDataToDatabase = async () => {
-    try {
-      // Generar algunos datos de ejemplo y agregarlos a la base de datos
-      const mockData = []
-      const now = new Date()
-      
-      for (let i = 0; i < 5; i++) {
-        const timestamp = new Date(now.getTime() - (i * 10 * 60 * 1000)) // Cada 10 minutos
-        const ph = 7.0 + (Math.random() - 0.5) * 0.6 // pH entre 6.7 y 7.3
-        
-        mockData.push({
-          ph: Math.round(ph * 100) / 100,
-          timestamp: timestamp.toISOString()
-        })
-      }
-      
-      const { error } = await supabase
-        .from('ph_readings')
-        .insert(mockData)
-        
-      if (!error) {
-        fetchReadings() // Recargar datos
-      }
-    } catch (error) {
-      console.error('Error adding mock data:', error)
-    }
   }
 
   const fetchReadings = async () => {
@@ -98,26 +67,23 @@ export default function Dashboard() {
       
       // Si no hay datos, usar datos de ejemplo
       if (!data || data.length === 0) {
-        console.log('No hay datos en la base de datos, mostrando datos de demostración...')
-        const sampleData = generateSampleData()
+        console.log('No hay datos en la base de datos, generando datos de ejemplo...')
+        const sampleData = await generateSampleData()
         setReadings(sampleData)
         setCurrentPh(sampleData[sampleData.length - 1].ph)
-        setIsUsingMockData(true)
       } else {
         setReadings(data || [])
         if (data && data.length > 0) {
           setCurrentPh(data[0].ph)
         }
-        setIsUsingMockData(false)
       }
     } catch (error) {
       console.error('Error fetching readings:', error)
       // En caso de error, también usar datos de ejemplo
-      console.log('Error en conexión, mostrando datos de demostración...')
-      const sampleData = generateSampleData()
+      console.log('Error en conexión, generando datos de ejemplo...')
+      const sampleData = await generateSampleData()
       setReadings(sampleData)
       setCurrentPh(sampleData[sampleData.length - 1].ph)
-      setIsUsingMockData(true)
     } finally {
       setLoading(false)
     }
@@ -141,33 +107,12 @@ export default function Dashboard() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Dashboard pH Metro
-            </h1>
-            <p className="text-gray-600">
-              Monitoreo en tiempo real de niveles de pH
-            </p>
-          </div>
-          
-          {isUsingMockData && (
-            <div className="text-right">
-              <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-lg mb-2">
-                <div className="flex items-center space-x-2">
-                  <Database className="h-4 w-4" />
-                  <span className="text-sm font-medium">Datos de Demostración</span>
-                </div>
-              </div>
-              <button
-                onClick={addMockDataToDatabase}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-              >
-                Agregar Datos Reales
-              </button>
-            </div>
-          )}
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Dashboard pH Metro
+        </h1>
+        <p className="text-gray-600">
+          Monitoreo en tiempo real de niveles de pH
+        </p>
       </div>
 
       {/* Current pH Status */}
@@ -188,12 +133,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="text-right text-sm text-gray-500">
-              <div>Última actualización: {new Date().toLocaleString('es-ES')}</div>
-              {isUsingMockData && (
-                <div className="text-yellow-600 font-medium">
-                  (Datos de demostración)
-                </div>
-              )}
+              Última actualización: {new Date().toLocaleString('es-ES')}
             </div>
           </div>
         </div>
@@ -209,11 +149,6 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <TrendingUp className="h-5 w-5 mr-2" />
               Gráfico de pH en Tiempo Real
-              {isUsingMockData && (
-                <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                  Demo
-                </span>
-              )}
             </h3>
             <PhChart data={readings.slice(0, 50).reverse()} />
           </div>
@@ -224,31 +159,15 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <Activity className="h-5 w-5 mr-2" />
               Lecturas Recientes
-              {isUsingMockData && (
-                <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                  Demo
-                </span>
-              )}
             </h3>
             <RecentReadings readings={readings.slice(0, 10)} />
           </div>
         </div>
       </div>
 
-      {/* Info Footer */}
-      <div className="text-center text-gray-500 text-sm space-y-2">
+      {/* Footer */}
+      <div className="text-center text-gray-500 text-sm">
         <p>Sistema de monitoreo pH - Datos actualizados automáticamente</p>
-        {isUsingMockData && (
-          <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg">
-            <p className="font-medium">🚀 ¡Dashboard Funcionando!</p>
-            <p className="text-sm mt-1">
-              Estos son datos de demostración. Conecta tu Arduino ESP8266 para ver datos reales en tiempo real.
-            </p>
-            <p className="text-xs mt-2 text-blue-600">
-              Endpoint API: <code>/api/ph-data</code> • Base de datos: Supabase
-            </p>
-          </div>
-        )}
       </div>
     </div>
   )
