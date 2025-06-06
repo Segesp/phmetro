@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase, PhReading } from '@/lib/supabase'
 import PhChart from '@/components/PhChart'
 import StatsCards from '@/components/StatsCards'
@@ -12,27 +12,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [currentPh, setCurrentPh] = useState<number | null>(null)
   const [isUsingMockData, setIsUsingMockData] = useState(false)
-
-  useEffect(() => {
-    fetchReadings()
-    
-    // Suscripción en tiempo real
-    const subscription = supabase
-      .channel('ph_readings')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'ph_readings' },
-        (payload: any) => {
-          setReadings(prev => [payload.new as PhReading, ...prev].slice(0, 100))
-          setCurrentPh((payload.new as PhReading).ph)
-          setIsUsingMockData(false)
-        }
-      )
-      .subscribe()
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
 
   const generateSampleData = (): PhReading[] => {
     // Generar datos de ejemplo para las últimas horas
@@ -58,35 +37,7 @@ export default function Dashboard() {
     return sampleData.reverse() // Ordenar cronológicamente
   }
 
-  const addMockDataToDatabase = async () => {
-    try {
-      // Generar algunos datos de ejemplo y agregarlos a la base de datos
-      const mockData = []
-      const now = new Date()
-      
-      for (let i = 0; i < 5; i++) {
-        const timestamp = new Date(now.getTime() - (i * 10 * 60 * 1000)) // Cada 10 minutos
-        const ph = 7.0 + (Math.random() - 0.5) * 0.6 // pH entre 6.7 y 7.3
-        
-        mockData.push({
-          ph: Math.round(ph * 100) / 100,
-          timestamp: timestamp.toISOString()
-        })
-      }
-      
-      const { error } = await supabase
-        .from('ph_readings')
-        .insert(mockData)
-        
-      if (!error) {
-        fetchReadings() // Recargar datos
-      }
-    } catch (error) {
-      console.error('Error adding mock data:', error)
-    }
-  }
-
-  const fetchReadings = async () => {
+  const fetchReadings = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('ph_readings')
@@ -121,7 +72,56 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  const addMockDataToDatabase = async () => {
+    try {
+      // Generar algunos datos de ejemplo y agregarlos a la base de datos
+      const mockData = []
+      const now = new Date()
+      
+      for (let i = 0; i < 5; i++) {
+        const timestamp = new Date(now.getTime() - (i * 10 * 60 * 1000)) // Cada 10 minutos
+        const ph = 7.0 + (Math.random() - 0.5) * 0.6 // pH entre 6.7 y 7.3
+        
+        mockData.push({
+          ph: Math.round(ph * 100) / 100,
+          timestamp: timestamp.toISOString()
+        })
+      }
+      
+      const { error } = await supabase
+        .from('ph_readings')
+        .insert(mockData)
+        
+      if (!error) {
+        fetchReadings() // Recargar datos
+      }
+    } catch (error) {
+      console.error('Error adding mock data:', error)
+    }
   }
+
+  useEffect(() => {
+    fetchReadings()
+    
+    // Suscripción en tiempo real
+    const subscription = supabase
+      .channel('ph_readings')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'ph_readings' },
+        (payload: any) => {
+          setReadings(prev => [payload.new as PhReading, ...prev].slice(0, 100))
+          setCurrentPh((payload.new as PhReading).ph)
+          setIsUsingMockData(false)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [fetchReadings])
 
   const getPhStatus = (ph: number) => {
     if (ph >= 6.5 && ph <= 8.5) return { status: 'Óptimo', class: 'ph-safe' }
