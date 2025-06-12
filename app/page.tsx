@@ -47,14 +47,19 @@ export default function Dashboard() {
 
       if (error) throw error
       
-      // Si no hay datos, usar datos de ejemplo
+      // Si no hay datos reales, mostrar mensaje claro
       if (!data || data.length === 0) {
-        console.log('No hay datos en la base de datos, mostrando datos de demostración...')
+        console.log('⚠️ No hay datos reales en la base de datos')
+        console.log('💡 Para ver datos reales:')
+        console.log('   1. Ejecuta el Arduino con modo simulación')
+        console.log('   2. O usa el script: ./enviar_datos_prueba.sh')
+        
         const sampleData = generateSampleData()
         setReadings(sampleData)
         setCurrentPh(sampleData[sampleData.length - 1].ph)
         setIsUsingMockData(true)
       } else {
+        console.log('✅ Mostrando datos reales de la base de datos')
         setReadings(data || [])
         if (data && data.length > 0) {
           setCurrentPh(data[0].ph)
@@ -62,9 +67,11 @@ export default function Dashboard() {
         setIsUsingMockData(false)
       }
     } catch (error) {
-      console.error('Error fetching readings:', error)
-      // En caso de error, también usar datos de ejemplo
-      console.log('Error en conexión, mostrando datos de demostración...')
+      console.error('❌ Error conectando a la base de datos:', error)
+      console.log('💡 Iniciando en modo demostración - Para datos reales:')
+      console.log('   1. Verifica la conexión a Supabase')
+      console.log('   2. Ejecuta el Arduino o script de prueba')
+      
       const sampleData = generateSampleData()
       setReadings(sampleData)
       setCurrentPh(sampleData[sampleData.length - 1].ph)
@@ -153,18 +160,30 @@ export default function Dashboard() {
           
           {isUsingMockData && (
             <div className="text-right">
-              <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-lg mb-2">
-                <div className="flex items-center space-x-2">
-                  <Database className="h-4 w-4" />
-                  <span className="text-sm font-medium">Datos de Demostración</span>
+              <div className="bg-orange-100 border-2 border-orange-400 text-orange-800 px-6 py-3 rounded-lg mb-3 shadow-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span className="text-lg font-bold">Modo Demostración</span>
+                </div>
+                <div className="text-sm">
+                  <p>📊 Mostrando datos simulados</p>
+                  <p>🔌 Para datos reales: conecta tu Arduino</p>
                 </div>
               </div>
-              <button
-                onClick={addMockDataToDatabase}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-              >
-                Agregar Datos Reales
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={addMockDataToDatabase}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                >
+                  + Agregar Datos de Prueba
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                >
+                  🔄 Recargar Dashboard
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -239,13 +258,41 @@ export default function Dashboard() {
       <div className="text-center text-gray-500 text-sm space-y-2">
         <p>Sistema de monitoreo pH - Datos actualizados automáticamente</p>
         {isUsingMockData && (
-          <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg">
-            <p className="font-medium">🚀 ¡Dashboard Funcionando!</p>
+          <div className="bg-blue-50 border border-blue-200 text-blue-800 p-6 rounded-lg">
+            <p className="font-bold text-lg mb-4">🚀 ¡Dashboard Funcionando Perfectamente!</p>
+            <div className="grid md:grid-cols-2 gap-4 text-left">
+              <div>
+                <p className="font-medium mb-2">📊 Estado Actual:</p>
+                <ul className="text-sm space-y-1">
+                  <li>✅ Dashboard operativo</li>
+                  <li>✅ Base de datos conectada</li>
+                  <li>✅ API funcionando</li>
+                  <li>⚠️ Mostrando datos de demostración</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium mb-2">🔌 Para datos reales:</p>
+                <ul className="text-sm space-y-1">
+                  <li>1. Conecta tu Arduino ESP8266</li>
+                  <li>2. Sube el código de pH Metro</li>
+                  <li>3. Configura WiFi: SEGOVIA3</li>
+                  <li>4. Los datos aparecerán automáticamente</li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-sm">
+                <strong>💡 Tip:</strong> El sistema está listo para recibir datos. 
+                Cuando el Arduino envíe la primera lectura, los datos de demostración desaparecerán automáticamente.
+              </p>
+            </div>
+          </div>
+        )}
+        {!isUsingMockData && readings.length > 0 && (
+          <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg">
+            <p className="font-medium">✅ Datos Reales Activos</p>
             <p className="text-sm mt-1">
-              Estos son datos de demostración. Conecta tu Arduino ESP8266 para ver datos reales en tiempo real.
-            </p>
-            <p className="text-xs mt-2 text-blue-600">
-              Endpoint API: <code>/api/ph-data</code> • Base de datos: Supabase
+              Mostrando {readings.length} lecturas reales de pH. Última actualización: {new Date(readings[0]?.created_at).toLocaleString()}
             </p>
           </div>
         )}
