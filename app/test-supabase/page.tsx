@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, PhReading } from '@/lib/supabase'
 
@@ -125,7 +127,7 @@ export default function TestSupabase() {
               <li>Verificar variables de entorno en .env.local</li>
               <li>Comprobar que la URL de Supabase sea correcta</li>
               <li>Verificar que la clave anónima sea válida</li>
-              <li>Confirmar que la tabla 'ph_readings' exista</li>
+              <li>Confirmar que la tabla &apos;ph_readings&apos; exista</li>
             </ul>
           </div>
         </div>
