@@ -7,7 +7,7 @@ import StatsCards from '@/components/StatsCards'
 import RecentReadings from '@/components/RecentReadings'
 import { Activity, Droplets, TrendingUp, AlertTriangle, Database, RefreshCw } from 'lucide-react'
 
-export default function Dashboard() {
+export default function DashboardFixed() {
   const [readings, setReadings] = useState<PhReading[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPh, setCurrentPh] = useState<number | null>(null)
@@ -15,7 +15,7 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState<string>('')
 
   const fetchReadings = useCallback(async () => {
-    console.log('🚀 [DASHBOARD] Iniciando consulta...')
+    console.log('🚀 [DASHBOARD-FIXED] Iniciando consulta...')
     setLoading(true)
     setError(null)
     
@@ -26,7 +26,7 @@ export default function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(100)
 
-      console.log('📊 [DASHBOARD] Datos recibidos:', {
+      console.log('📊 [DASHBOARD-FIXED] Datos recibidos:', {
         success: !error,
         count: data?.length || 0,
         firstRecord: data?.[0]
@@ -40,16 +40,16 @@ export default function Dashboard() {
         setReadings(data)
         setCurrentPh(data[0].ph)
         setLastUpdate(new Date().toLocaleString())
-        console.log('✅ [DASHBOARD] Datos cargados exitosamente')
+        console.log('✅ [DASHBOARD-FIXED] Datos cargados exitosamente')
       } else {
         setReadings([])
         setCurrentPh(null)
-        console.log('⚠️ [DASHBOARD] No hay datos disponibles')
+        console.log('⚠️ [DASHBOARD-FIXED] No hay datos disponibles')
       }
       
     } catch (err) {
       const errorMessage = (err as Error).message
-      console.error('❌ [DASHBOARD] Error:', errorMessage)
+      console.error('❌ [DASHBOARD-FIXED] Error:', errorMessage)
       setError(errorMessage)
       setReadings([])
       setCurrentPh(null)
@@ -67,7 +67,7 @@ export default function Dashboard() {
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'ph_readings' },
         (payload: any) => {
-          console.log('📡 [DASHBOARD] Nuevo dato en tiempo real:', payload.new)
+          console.log('📡 [DASHBOARD-FIXED] Nuevo dato en tiempo real:', payload.new)
           const newReading = payload.new as PhReading
           setReadings(prev => [newReading, ...prev].slice(0, 100))
           setCurrentPh(newReading.ph)
