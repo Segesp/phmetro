@@ -15,16 +15,17 @@ const int adcMax = 1023;                 // Valor ADC máximo (5V en Arduino UNO
 // ========== CONFIGURACIÓN WiFi ==========
 const String wifiSSID = "SEGOVIA3";
 const String wifiPassword = "76840574";
-const String serverURL = "https://phmetro-p5w79503p-segesps-projects.vercel.app/api/ph-data";
+const String serverURL = "https://phmetro-phi.vercel.app/api/ph-data";
 
 // ========== CONFIGURACIÓN DE TIMING ==========
 const unsigned long readInterval = 2000;   // Leer sensor cada 2 segundos
-const unsigned long sendInterval = 15000;  // Enviar datos cada 15 segundos (MODO PRUEBA)
-const int maxReadings = 10;               // Promedio de 10 lecturas
+const unsigned long sendInterval = 10000;  // Enviar datos cada 10 segundos (MODO PRUEBA RÁPIDA)
+const int maxReadings = 5;                // Promedio de 5 lecturas (más rápido para pruebas)
 
 // ========== CONFIGURACIÓN DE DEBUG ==========
 const bool debugMode = true;              // Activar logging detallado
 const bool simulationMode = true;         // true = SIMULACIÓN DE PRUEBA, false = sensor real
+const bool sendTestDataOnStart = true;    // true = enviar datos de prueba al inicio
 
 // ========== VARIABLES GLOBALES ==========
 float phReadings[maxReadings];           // Array para promedio
@@ -35,6 +36,7 @@ unsigned long lastSendTime = 0;          // Último envío de datos
 int transmissionCounter = 0;             // Contador de transmisiones
 int consecutiveErrors = 0;               // Errores consecutivos
 bool esp8266Ready = false;               // Estado del módulo ESP8266
+bool testDataSent = false;               // Flag para datos de prueba iniciales
 
 void setup() {
   Serial.begin(9600);  // Comunicación con ESP8266 (9600 baud estándar)
@@ -52,6 +54,11 @@ void setup() {
   
   // Inicializar ESP8266
   initializeESP8266();
+  
+  // Enviar datos de prueba al inicio
+  if (sendTestDataOnStart && esp8266Ready) {
+    sendInitialTestData();
+  }
   
   printReadyBanner();
 }
@@ -317,6 +324,48 @@ bool sendATCommand(String command, int timeout) {
   return (response.indexOf("OK") != -1);
 }
 
+// ========== FUNCIÓN PARA ENVÍO DE DATOS DE PRUEBA ==========
+void sendInitialTestData() {
+  Serial.println("\n🧪 ENVIANDO DATOS DE PRUEBA INICIALES...");
+  Serial.println("===========================================");
+  
+  // Array de valores de pH de prueba para Arduino UNO + ESP8266
+  float testValues[] = {6.8, 7.0, 7.2, 7.4, 7.1};
+  int numTests = sizeof(testValues) / sizeof(testValues[0]);
+  
+  for (int i = 0; i < numTests; i++) {
+    float testPH = testValues[i];
+    Serial.println("\n📊 TEST " + String(i + 1) + "/" + String(numTests) + " - pH: " + String(testPH, 1));
+    
+    // Verificar ESP8266 antes de enviar
+    if (!esp8266Ready) {
+      Serial.println("❌ ESP8266 no está listo - saltando prueba");
+      continue;
+    }
+    
+    bool success = transmitDataViaESP8266(testPH);
+    
+    if (success) {
+      Serial.println("✅ Dato de prueba enviado exitosamente");
+    } else {
+      Serial.println("❌ Error enviando dato de prueba");
+    }
+    
+    // Esperar entre envíos de prueba
+    if (i < numTests - 1) {
+      Serial.println("⏳ Esperando 3 segundos...");
+      delay(3000);
+    }
+  }
+  
+  Serial.println("\n🎉 DATOS DE PRUEBA COMPLETADOS");
+  Serial.println("🔄 Iniciando operación normal...");
+  Serial.println("===========================================\n");
+  
+  testDataSent = true;
+  delay(2000); // Pausa antes de continuar con operación normal
+}
+
 // ========== FUNCIONES DE INFORMACIÓN ==========
 void printWelcomeBanner() {
   Serial.println("===============================================");
@@ -329,6 +378,8 @@ void printWelcomeBanner() {
   Serial.println("⏱️ Intervalo: " + String(sendInterval/1000) + " segundos");
   Serial.println("🧪 Simulación: " + String(simulationMode ? "SÍ" : "NO"));
   Serial.println("🔍 Debug: " + String(debugMode ? "SÍ" : "NO"));
+  Serial.println("🚀 Pruebas automáticas: " + String(sendTestDataOnStart ? "SÍ" : "NO"));
+  Serial.println("📊 Promedio de lecturas: " + String(maxReadings));
   Serial.println("===============================================");
 }
 
@@ -337,12 +388,23 @@ void printReadyBanner() {
   Serial.println("📊 Leyendo sensor cada " + String(readInterval/1000) + " segundos");
   Serial.println("📡 Transmitiendo cada " + String(sendInterval/1000) + " segundos");
   Serial.println("🧮 Promediando " + String(maxReadings) + " lecturas por transmisión");
+  Serial.println("📱 Dashboard: https://phmetro-phi.vercel.app");
+  if (testDataSent) {
+    Serial.println("🧪 Datos de prueba enviados - Operación normal iniciada");
+  } else if (sendTestDataOnStart) {
+    Serial.println("🧪 Listos para enviar datos de prueba");
+  }
   Serial.println("===============================================");
 }
 
 void printTransmissionHeader() {
   Serial.println("\n📡 TRANSMISIÓN #" + String(transmissionCounter));
   Serial.println("🕐 Tiempo: " + String(millis()/1000) + "s");
+  if (testDataSent) {
+    Serial.println("🧪 Datos de prueba: ✅ ENVIADOS");
+  } else {
+    Serial.println("🧪 Datos de prueba: ⏳ PENDIENTES");
+  }
   Serial.println("=========================");
 }
 
