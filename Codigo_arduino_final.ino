@@ -1,8 +1,9 @@
 // ===============================================
-// pH METRO ESP8266 - VERSIÓN DEBUG ULTRA-VERBOSE
+// pH METRO ESP8266 - VERSIÓN DEBUG ULTRA-VERBOSE CORREGIDO
 // ===============================================
 // Esta versión imprime absolutamente todo lo que sucede
 // Ideal para debugging y verificación de transmisión
+// CORREGIDO: Sin caracteres Unicode y con funciones helper
 
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -22,6 +23,15 @@ const int retryDelay = 3000;
 WiFiClient wifiClient;
 unsigned long lastSendTime = 0;
 int transmissionCounter = 0;
+
+// ========== FUNCIONES HELPER ==========
+String repeatChar(char c, int count) {
+  String result = "";
+  for (int i = 0; i < count; i++) {
+    result += c;
+  }
+  return result;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -68,111 +78,111 @@ void loop() {
 }
 
 void printWelcomeBanner() {
-  Serial.println("\n" + String('=') * 60);
-  Serial.println("🔍 pH METRO ESP8266 - MODO DEBUG ULTRA-VERBOSE");
-  Serial.println("🧪 VERSIÓN DE DEBUGGING COMPLETO");
-  Serial.println("📊 TODAS LAS OPERACIONES SERÁN MONITOREADAS");
-  Serial.println(String('=') * 60);
-  Serial.println("🚀 Iniciando secuencia de arranque...");
+  Serial.println("\n" + repeatChar('=', 60));
+  Serial.println("[DEBUG] pH METRO ESP8266 - MODO DEBUG ULTRA-VERBOSE");
+  Serial.println("[LABS] VERSION DE DEBUGGING COMPLETO");
+  Serial.println("[MONITOR] TODAS LAS OPERACIONES SERAN MONITOREADAS");
+  Serial.println(repeatChar('=', 60));
+  Serial.println("[BOOT] Iniciando secuencia de arranque...");
 }
 
 void printSystemDiagnostics() {
-  Serial.println("\n🖥️ DIAGNÓSTICOS DEL SISTEMA:");
-  Serial.println(String('-') * 40);
-  Serial.print("🆔 ESP Chip ID: 0x");
+  Serial.println("\n[SYSTEM] DIAGNOSTICOS DEL SISTEMA:");
+  Serial.println(repeatChar('-', 40));
+  Serial.print("[ID] ESP Chip ID: 0x");
   Serial.println(ESP.getChipId(), HEX);
-  Serial.print("💾 Flash Chip ID: 0x");
+  Serial.print("[FLASH] Flash Chip ID: 0x");
   Serial.println(ESP.getFlashChipId(), HEX);
-  Serial.print("⚡ CPU Frequency: ");
+  Serial.print("[CPU] CPU Frequency: ");
   Serial.print(ESP.getCpuFreqMHz());
   Serial.println(" MHz");
-  Serial.print("🧠 Free Heap: ");
+  Serial.print("[RAM] Free Heap: ");
   Serial.print(ESP.getFreeHeap());
   Serial.println(" bytes");
-  Serial.print("📏 Sketch Size: ");
+  Serial.print("[SIZE] Sketch Size: ");
   Serial.print(ESP.getSketchSize());
   Serial.println(" bytes");
-  Serial.print("💽 Free Sketch Space: ");
+  Serial.print("[SPACE] Free Sketch Space: ");
   Serial.print(ESP.getFreeSketchSpace());
   Serial.println(" bytes");
-  Serial.print("🔧 SDK Version: ");
+  Serial.print("[SDK] SDK Version: ");
   Serial.println(ESP.getSdkVersion());
-  Serial.println(String('-') * 40);
+  Serial.println(repeatChar('-', 40));
 }
 
 void connectToWiFiVerbose() {
-  Serial.println("\n🌐 INICIANDO CONEXIÓN WiFi:");
-  Serial.println(String('-') * 30);
-  Serial.print("📡 SSID: ");
+  Serial.println("\n[WIFI] INICIANDO CONEXION WiFi:");
+  Serial.println(repeatChar('-', 30));
+  Serial.print("[SSID] SSID: ");
   Serial.println(ssid);
-  Serial.print("🔑 Password length: ");
+  Serial.print("[PASS] Password length: ");
   Serial.print(strlen(password));
   Serial.println(" caracteres");
   
-  Serial.println("🔄 Iniciando conexión...");
+  Serial.println("[CONNECT] Iniciando conexion...");
   WiFi.begin(ssid, password);
   
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 30) {
     delay(500);
     attempts++;
-    Serial.print("⏳ Intento ");
+    Serial.print("[WAIT] Intento ");
     Serial.print(attempts);
     Serial.print("/30 - Estado: ");
     Serial.println(getWiFiStatusText(WiFi.status()));
   }
   
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n✅ WiFi CONECTADO EXITOSAMENTE");
-    Serial.println(String('-') * 30);
-    Serial.print("📍 IP Local: ");
+    Serial.println("\n[SUCCESS] WiFi CONECTADO EXITOSAMENTE");
+    Serial.println(repeatChar('-', 30));
+    Serial.print("[IP] IP Local: ");
     Serial.println(WiFi.localIP());
-    Serial.print("🌐 Gateway: ");
+    Serial.print("[GATEWAY] Gateway: ");
     Serial.println(WiFi.gatewayIP());
-    Serial.print("🔍 DNS: ");
+    Serial.print("[DNS] DNS: ");
     Serial.println(WiFi.dnsIP());
-    Serial.print("📶 RSSI: ");
+    Serial.print("[SIGNAL] RSSI: ");
     Serial.print(WiFi.RSSI());
     Serial.println(" dBm");
-    Serial.print("📋 MAC Address: ");
+    Serial.print("[MAC] MAC Address: ");
     Serial.println(WiFi.macAddress());
-    Serial.println(String('-') * 30);
+    Serial.println(repeatChar('-', 30));
   } else {
-    Serial.println("\n❌ ERROR DE CONEXIÓN WiFi");
-    Serial.println("🔄 Reiniciando sistema en 10 segundos...");
+    Serial.println("\n[ERROR] ERROR DE CONEXION WiFi");
+    Serial.println("[RESTART] Reiniciando sistema en 10 segundos...");
     delay(10000);
     ESP.restart();
   }
 }
 
 void printReadyBanner() {
-  Serial.println("\n" + String('✅') * 20);
-  Serial.println("🚀 SISTEMA COMPLETAMENTE OPERATIVO");
-  Serial.println(String('✅') * 20);
-  Serial.print("⏰ Intervalo de transmisión: ");
+  Serial.println("\n" + repeatChar('+', 50));
+  Serial.println("[READY] SISTEMA COMPLETAMENTE OPERATIVO");
+  Serial.println(repeatChar('+', 50));
+  Serial.print("[INTERVAL] Intervalo de transmision: ");
   Serial.print(sendInterval / 1000);
   Serial.println(" segundos");
-  Serial.print("🎯 Servidor destino: ");
+  Serial.print("[SERVER] Servidor destino: ");
   Serial.println(serverUrl);
-  Serial.println("🧪 Modo: SIMULACIÓN DE DATOS pH");
-  Serial.println("🔍 Debug level: ULTRA-VERBOSE");
-  Serial.println(String('🚀') * 20);
+  Serial.println("[MODE] Modo: SIMULACION DE DATOS pH");
+  Serial.println("[DEBUG] Debug level: ULTRA-VERBOSE");
+  Serial.println(repeatChar('+', 50));
 }
 
 void printTransmissionHeader() {
-  Serial.println("\n" + String('█') * 50);
-  Serial.print("📡 TRANSMISIÓN #");
+  Serial.println("\n" + repeatChar('#', 50));
+  Serial.print("[TX] TRANSMISION #");
   Serial.print(transmissionCounter);
   Serial.println(" - INICIANDO PROCESO COMPLETO");
-  Serial.println(String('█') * 50);
-  Serial.print("🕐 Timestamp: ");
+  Serial.println(repeatChar('#', 50));
+  Serial.print("[TIME] Timestamp: ");
   Serial.print(millis() / 1000);
   Serial.println(" segundos desde arranque");
 }
 
 float generateAndShowPHData() {
-  Serial.println("\n🧪 GENERANDO DATOS DE pH SIMULADOS:");
-  Serial.println(String('-') * 35);
+  Serial.println("\n[pH] GENERANDO DATOS DE pH SIMULADOS:");
+  Serial.println(repeatChar('-', 35));
   
   // Usar el número de transmisión para crear patrones
   float basePH = 7.0;
@@ -182,46 +192,46 @@ float generateAndShowPHData() {
   float simulatedPH = basePH + variation + noise;
   simulatedPH = constrain(simulatedPH, 6.0, 8.5);
   
-  Serial.print("📊 pH base: ");
+  Serial.print("[BASE] pH base: ");
   Serial.println(basePH, 3);
-  Serial.print("🌊 Variación senoidal: ");
+  Serial.print("[WAVE] Variacion senoidal: ");
   Serial.println(variation, 3);
-  Serial.print("🎲 Ruido aleatorio: ");
+  Serial.print("[NOISE] Ruido aleatorio: ");
   Serial.println(noise, 3);
-  Serial.print("🎯 pH final calculado: ");
+  Serial.print("[CALC] pH final calculado: ");
   Serial.println(simulatedPH, 3);
-  Serial.print("✅ pH constrainido (6.0-8.5): ");
+  Serial.print("[FINAL] pH constrainido (6.0-8.5): ");
   Serial.println(simulatedPH, 3);
-  Serial.println(String('-') * 35);
+  Serial.println(repeatChar('-', 35));
   
   return simulatedPH;
 }
 
 void printPreTransmissionDetails(float phValue) {
-  Serial.println("\n📋 DETALLES PRE-TRANSMISIÓN:");
-  Serial.println(String('-') * 30);
-  Serial.print("📊 Valor a transmitir: ");
+  Serial.println("\n[PRE-TX] DETALLES PRE-TRANSMISION:");
+  Serial.println(repeatChar('-', 30));
+  Serial.print("[VALUE] Valor a transmitir: ");
   Serial.print(phValue, 3);
   Serial.println("");
-  Serial.print("🔍 Validación: ");
-  Serial.println((phValue >= 0.0 && phValue <= 14.0) ? "VÁLIDO ✅" : "INVÁLIDO ❌");
-  Serial.print("🌐 Estado WiFi: ");
+  Serial.print("[VALID] Validacion: ");
+  Serial.println((phValue >= 0.0 && phValue <= 14.0) ? "VALIDO [OK]" : "INVALIDO [ERROR]");
+  Serial.print("[WIFI] Estado WiFi: ");
   Serial.println(getWiFiStatusText(WiFi.status()));
-  Serial.print("📶 Intensidad señal: ");
+  Serial.print("[SIGNAL] Intensidad señal: ");
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
-  Serial.print("💾 Memoria libre: ");
+  Serial.print("[RAM] Memoria libre: ");
   Serial.print(ESP.getFreeHeap());
   Serial.println(" bytes");
-  Serial.println(String('-') * 30);
+  Serial.println(repeatChar('-', 30));
 }
 
 bool performDetailedTransmission(float phValue) {
-  Serial.println("\n🚀 INICIANDO TRANSMISIÓN DETALLADA:");
-  Serial.println(String('▼') * 40);
+  Serial.println("\n[TX-START] INICIANDO TRANSMISION DETALLADA:");
+  Serial.println(repeatChar('>', 40));
   
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("❌ ABORT: WiFi desconectado");
+    Serial.println("[ABORT] WiFi desconectado");
     return false;
   }
   
@@ -229,23 +239,23 @@ bool performDetailedTransmission(float phValue) {
   bool success = false;
   
   for (int attempt = 1; attempt <= maxRetries; attempt++) {
-    Serial.println(String('─') * 25);
-    Serial.print("🔄 INTENTO ");
+    Serial.println(repeatChar('-', 25));
+    Serial.print("[ATTEMPT] INTENTO ");
     Serial.print(attempt);
     Serial.print(" de ");
     Serial.println(maxRetries);
-    Serial.println(String('─') * 25);
+    Serial.println(repeatChar('-', 25));
     
     // Configuración HTTP
-    Serial.println("⚙️ Configurando cliente HTTP...");
+    Serial.println("[CONFIG] Configurando cliente HTTP...");
     http.begin(wifiClient, serverUrl);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("User-Agent", "ESP8266-Debug/1.0");
     http.setTimeout(15000);
-    Serial.println("✅ Cliente HTTP configurado");
+    Serial.println("[OK] Cliente HTTP configurado");
     
     // Construcción del JSON
-    Serial.println("📦 Construyendo payload JSON...");
+    Serial.println("[JSON] Construyendo payload JSON...");
     String json = "{";
     json += "\"ph\":" + String(phValue, 3) + ",";
     json += "\"transmission\":" + String(transmissionCounter) + ",";
@@ -257,25 +267,25 @@ bool performDetailedTransmission(float phValue) {
     json += "\"uptime\":" + String(millis() / 1000);
     json += "}";
     
-    Serial.println("📄 JSON generado:");
+    Serial.println("[PAYLOAD] JSON generado:");
     Serial.println(json);
-    Serial.print("📏 Tamaño payload: ");
+    Serial.print("[SIZE] Tamaño payload: ");
     Serial.print(json.length());
     Serial.println(" bytes");
     
     // Transmisión
-    Serial.println("📡 TRANSMITIENDO...");
+    Serial.println("[SEND] TRANSMITIENDO...");
     unsigned long startTime = millis();
     int responseCode = http.POST(json);
     unsigned long endTime = millis();
     
-    Serial.print("⏱️ Tiempo transmisión: ");
+    Serial.print("[TIME] Tiempo transmision: ");
     Serial.print(endTime - startTime);
     Serial.println(" ms");
     
     // Análisis de respuesta
-    Serial.println("📥 ANALIZANDO RESPUESTA:");
-    Serial.print("🔢 HTTP Code: ");
+    Serial.println("[RESPONSE] ANALIZANDO RESPUESTA:");
+    Serial.print("[CODE] HTTP Code: ");
     Serial.print(responseCode);
     Serial.print(" (");
     Serial.print(getHTTPStatusText(responseCode));
@@ -283,26 +293,26 @@ bool performDetailedTransmission(float phValue) {
     
     if (responseCode > 0) {
       String response = http.getString();
-      Serial.print("📄 Response length: ");
+      Serial.print("[LENGTH] Response length: ");
       Serial.print(response.length());
       Serial.println(" caracteres");
-      Serial.println("📄 Response body:");
+      Serial.println("[BODY] Response body:");
       Serial.println(response);
       
       if (responseCode == 200 || responseCode == 201) {
-        Serial.println("🎯 TRANSMISIÓN EXITOSA CONFIRMADA");
+        Serial.println("[SUCCESS] TRANSMISION EXITOSA CONFIRMADA");
         success = true;
         break;
       }
     } else {
-      Serial.print("❌ Error de conexión: ");
+      Serial.print("[ERROR] Error de conexion: ");
       Serial.println(http.errorToString(responseCode));
     }
     
     http.end();
     
     if (attempt < maxRetries && !success) {
-      Serial.print("⏳ Esperando ");
+      Serial.print("[WAIT] Esperando ");
       Serial.print(retryDelay / 1000);
       Serial.println(" segundos...");
       delay(retryDelay);
@@ -313,34 +323,34 @@ bool performDetailedTransmission(float phValue) {
 }
 
 void printTransmissionResult(bool success) {
-  Serial.println(String('▲') * 40);
+  Serial.println(repeatChar('<', 40));
   if (success) {
-    Serial.println("🎉 TRANSMISIÓN COMPLETADA CON ÉXITO");
-    Serial.println("✅ Datos confirmados en servidor");
+    Serial.println("[RESULT] TRANSMISION COMPLETADA CON EXITO");
+    Serial.println("[CONFIRM] Datos confirmados en servidor");
   } else {
-    Serial.println("💥 TRANSMISIÓN FALLIDA");
-    Serial.println("❌ No se pudo entregar los datos");
+    Serial.println("[RESULT] TRANSMISION FALLIDA");
+    Serial.println("[ERROR] No se pudo entregar los datos");
   }
-  Serial.println(String('▲') * 40);
+  Serial.println(repeatChar('<', 40));
 }
 
 void printNextTransmissionInfo() {
-  Serial.println(String('⏳') * 30);
-  Serial.print("📅 Próxima transmisión en: ");
+  Serial.println(repeatChar('~', 30));
+  Serial.print("[NEXT] Proxima transmision en: ");
   Serial.print(sendInterval / 1000);
   Serial.println(" segundos");
-  Serial.print("🔢 Será la transmisión #");
+  Serial.print("[COUNT] Sera la transmision #");
   Serial.println(transmissionCounter + 1);
-  Serial.println(String('⏳') * 30);
+  Serial.println(repeatChar('~', 30));
 }
 
 void printSystemStatus() {
-  Serial.println("\n💓 ESTADO DEL SISTEMA:");
-  Serial.print("⏰ Uptime: ");
+  Serial.println("\n[STATUS] ESTADO DEL SISTEMA:");
+  Serial.print("[UPTIME] Uptime: ");
   Serial.print(millis() / 1000);
-  Serial.print("s | 🧠 RAM: ");
+  Serial.print("s | [RAM] RAM: ");
   Serial.print(ESP.getFreeHeap());
-  Serial.print(" bytes | 📶 RSSI: ");
+  Serial.print(" bytes | [SIGNAL] RSSI: ");
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
 }
