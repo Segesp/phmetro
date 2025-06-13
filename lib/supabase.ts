@@ -19,6 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export interface PhReading {
   id: string
   ph: number
-  timestamp: string
+  timestamp?: string
   created_at: string
+  device?: string  // Propiedad opcional para compatibilidad con ThingSpeak
 }

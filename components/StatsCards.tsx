@@ -44,7 +44,7 @@ export default function StatsCards({ readings }: StatsCardsProps) {
       value: currentPh.toFixed(2),
       icon: Activity,
       color: 'from-blue-500 to-blue-600',
-      subtitle: `Fuente: ${readings[0]?.device || 'N/A'}`
+      subtitle: `Fuente: ${readings[0]?.device || 'Arduino'}`
     },
     {
       title: 'pH Promedio',
