@@ -1,0 +1,19 @@
+name = "esp8266-phmetro-proxy"
+main = "cloudflare-worker.js"
+compatibility_date = "2024-01-01"
+
+# Configuración del Worker
+[env.production]
+name = "esp8266-phmetro-proxy"
+
+# Variables de entorno (opcional)
+[vars]
+VERCEL_ENDPOINT = "https://phmetro-phi.vercel.app/api/ph-proxy"
+
+# Configuración de deployment
+[build]
+command = ""
+
+# Configuración de triggers
+[[triggers]]
+pattern = "*/*"

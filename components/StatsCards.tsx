@@ -34,13 +34,17 @@ export default function StatsCards({ readings }: StatsCardsProps) {
   const previousAvg = previous.reduce((a, b) => a + b, 0) / previous.length
   const trend = recentAvg - previousAvg
 
+  // Calcular estadísticas por fuente
+  const supabaseCount = readings.filter(r => r.device !== 'ThingSpeak').length
+  const thingSpeakCount = readings.filter(r => r.device === 'ThingSpeak').length
+  
   const stats = [
     {
       title: 'pH Actual',
       value: currentPh.toFixed(2),
       icon: Activity,
       color: 'from-blue-500 to-blue-600',
-      subtitle: 'Última lectura'
+      subtitle: `Fuente: ${readings[0]?.device || 'N/A'}`
     },
     {
       title: 'pH Promedio',
@@ -50,11 +54,11 @@ export default function StatsCards({ readings }: StatsCardsProps) {
       subtitle: `${readings.length} lecturas`
     },
     {
-      title: 'Rango pH',
-      value: `${minPh.toFixed(1)} - ${maxPh.toFixed(1)}`,
+      title: 'Fuentes Datos',
+      value: `${supabaseCount + thingSpeakCount}`,
       icon: TrendingDown,
       color: 'from-purple-500 to-purple-600',
-      subtitle: 'Mín - Máx'
+      subtitle: `DB:${supabaseCount} TS:${thingSpeakCount}`
     },
     {
       title: 'Tendencia',

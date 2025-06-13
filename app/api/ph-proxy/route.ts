@@ -18,16 +18,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Preparar datos para Supabase
+    // Preparar datos para Supabase (solo columnas existentes)
     const phData = {
       ph: parseFloat(body.ph),
-      timestamp: new Date().toISOString(),
-      device: body.device || 'Arduino_HTTP_Proxy',
-      sensor: body.sensor || 'pH_sensor',
-      transmission: body.transmission || 0,
-      readings: body.readings || 1,
-      notes: 'Via HTTP Proxy'
+      timestamp: body.timestamp ? new Date(body.timestamp).toISOString() : null
     }
+
+    console.log('📊 [PH-PROXY] Datos a insertar:', phData)
 
     // Insertar en Supabase
     const { data, error } = await supabase
@@ -47,8 +44,9 @@ export async function POST(request: NextRequest) {
       { 
         success: true, 
         message: 'pH data received and stored',
-        data: phData,
-        id: data?.[0]?.id
+        data: { ...phData, device: body.device || 'Arduino' },
+        id: data?.[0]?.id,
+        timestamp: new Date().toISOString()
       },
       { 
         status: 200,

@@ -5,14 +5,16 @@ import { supabase, PhReading } from '@/lib/supabase'
 import PhChart from '@/components/PhChart'
 import StatsCards from '@/components/StatsCards'
 import RecentReadings from '@/components/RecentReadings'
-import { Activity, Droplets, TrendingUp, AlertTriangle, Database, RefreshCw } from 'lucide-react'
+import { Activity, Droplets, TrendingUp, AlertTriangle, Database, RefreshCw, Wifi } from 'lucide-react'
 
 export default function Dashboard() {
   const [readings, setReadings] = useState<PhReading[]>([])
+  const [thingSpeakData, setThingSpeakData] = useState<PhReading[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPh, setCurrentPh] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<string>('')
+  const [dataSource, setDataSource] = useState<'supabase' | 'thingspeak' | 'both'>('both')
 
   const fetchReadings = useCallback(async () => {
     console.log('🚀 [DASHBOARD] Iniciando consulta...')
@@ -20,25 +22,44 @@ export default function Dashboard() {
     setError(null)
     
     try {
+      // Consultar Supabase
       const { data, error } = await supabase
         .from('ph_readings')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(100)
+        .limit(50)
 
-      console.log('📊 [DASHBOARD] Datos recibidos:', {
+      console.log('📊 [DASHBOARD] Datos Supabase:', {
         success: !error,
         count: data?.length || 0,
         firstRecord: data?.[0]
       })
 
-      if (error) {
-        throw new Error(`Error de Supabase: ${error.message}`)
+      // Consultar ThingSpeak en paralelo
+      const thingSpeakReadings = await fetchThingSpeakData()
+
+      // Combinar datos según la fuente seleccionada
+      let combinedReadings: PhReading[] = []
+      
+      if (dataSource === 'supabase' && data) {
+        combinedReadings = data
+      } else if (dataSource === 'thingspeak') {
+        combinedReadings = thingSpeakReadings
+      } else if (dataSource === 'both') {
+        // Combinar ambas fuentes
+        const supabaseData = data || []
+        combinedReadings = [...supabaseData, ...thingSpeakReadings]
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 100)
       }
 
-      if (data && data.length > 0) {
-        setReadings(data)
-        setCurrentPh(data[0].ph)
+      if (error && dataSource !== 'thingspeak') {
+        console.error('⚠️ [SUPABASE] Error:', error.message)
+      }
+
+      if (combinedReadings.length > 0) {
+        setReadings(combinedReadings)
+        setCurrentPh(combinedReadings[0].ph)
         setLastUpdate(new Date().toLocaleString())
         console.log('✅ [DASHBOARD] Datos cargados exitosamente')
       } else {
@@ -56,10 +77,59 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
+  }, [dataSource, fetchThingSpeakData])
+
+  // Función para leer datos de ThingSpeak
+  const fetchThingSpeakData = useCallback(async () => {
+    console.log('📡 [THINGSPEAK] Consultando datos...')
+    
+    try {
+      // API de ThingSpeak con tu Read API Key
+      const response = await fetch(
+        'https://api.thingspeak.com/channels/2988488/fields/1.json?api_key=Z6SC5MLLP0FR4PC4&results=50',
+        { 
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`ThingSpeak API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('📊 [THINGSPEAK] Datos recibidos:', data)
+
+      if (data.feeds && data.feeds.length > 0) {
+        // Convertir formato ThingSpeak a formato PhReading
+        const thingSpeakReadings: PhReading[] = data.feeds
+          .filter((feed: any) => feed.field1 !== null)
+          .map((feed: any, index: number) => ({
+            id: `ts_${feed.entry_id || index}`,
+            ph: parseFloat(feed.field1),
+            device: 'ThingSpeak',
+            created_at: feed.created_at
+          }))
+
+        setThingSpeakData(thingSpeakReadings)
+        console.log('✅ [THINGSPEAK] Datos procesados:', thingSpeakReadings.length)
+        return thingSpeakReadings
+      }
+      
+      return []
+    } catch (err) {
+      console.error('❌ [THINGSPEAK] Error:', err)
+      return []
+    }
   }, [])
 
   useEffect(() => {
     fetchReadings()
+    fetchThingSpeakData()
     
     // Suscripción en tiempo real
     const subscription = supabase
@@ -83,7 +153,7 @@ export default function Dashboard() {
       subscription.unsubscribe()
       clearInterval(interval)
     }
-  }, [fetchReadings])
+  }, [fetchReadings, fetchThingSpeakData])
 
   const getPhStatus = (ph: number) => {
     if (ph >= 6.5 && ph <= 8.5) return { status: 'Óptimo', class: 'ph-safe', color: 'text-green-600' }
@@ -117,20 +187,36 @@ export default function Dashboard() {
             </p>
           </div>
           
-          <div className="text-right">
-            <button
-              onClick={fetchReadings}
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>{loading ? 'Actualizando...' : 'Actualizar'}</span>
-            </button>
-            {lastUpdate && (
-              <p className="text-xs text-gray-500 mt-1">
-                Última actualización: {lastUpdate}
-              </p>
-            )}
+          <div className="flex items-center space-x-4">
+            {/* Selector de fuente de datos */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">Fuente:</label>
+              <select
+                value={dataSource}
+                onChange={(e) => setDataSource(e.target.value as 'supabase' | 'thingspeak' | 'both')}
+                className="bg-white border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="both">📊 Ambas fuentes</option>
+                <option value="supabase">🗄️ Supabase</option>
+                <option value="thingspeak">📡 ThingSpeak</option>
+              </select>
+            </div>
+            
+            <div className="text-right">
+              <button
+                onClick={fetchReadings}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <span>{loading ? 'Actualizando...' : 'Actualizar'}</span>
+              </button>
+              {lastUpdate && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Última actualización: {lastUpdate}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
