@@ -16,6 +16,54 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState<string>('')
   const [dataSource, setDataSource] = useState<'supabase' | 'thingspeak' | 'both'>('both')
 
+  // Función para leer datos de ThingSpeak
+  const fetchThingSpeakData = useCallback(async () => {
+    console.log('📡 [THINGSPEAK] Consultando datos...')
+    
+    try {
+      // API de ThingSpeak con tu Read API Key
+      const response = await fetch(
+        'https://api.thingspeak.com/channels/2988488/fields/1.json?api_key=Z6SC5MLLP0FR4PC4&results=50',
+        { 
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`ThingSpeak API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('📊 [THINGSPEAK] Datos recibidos:', data)
+
+      if (data.feeds && data.feeds.length > 0) {
+        // Convertir formato ThingSpeak a formato PhReading
+        const thingSpeakReadings: PhReading[] = data.feeds
+          .filter((feed: any) => feed.field1 !== null)
+          .map((feed: any, index: number) => ({
+            id: `ts_${feed.entry_id || index}`,
+            ph: parseFloat(feed.field1),
+            device: 'ThingSpeak',
+            created_at: feed.created_at
+          }))
+
+        setThingSpeakData(thingSpeakReadings)
+        console.log('✅ [THINGSPEAK] Datos procesados:', thingSpeakReadings.length)
+        return thingSpeakReadings
+      }
+      
+      return []
+    } catch (err) {
+      console.error('❌ [THINGSPEAK] Error:', err)
+      return []
+    }
+  }, [])
+
   const fetchReadings = useCallback(async () => {
     console.log('🚀 [DASHBOARD] Iniciando consulta...')
     setLoading(true)
@@ -78,54 +126,6 @@ export default function Dashboard() {
       setLoading(false)
     }
   }, [dataSource, fetchThingSpeakData])
-
-  // Función para leer datos de ThingSpeak
-  const fetchThingSpeakData = useCallback(async () => {
-    console.log('📡 [THINGSPEAK] Consultando datos...')
-    
-    try {
-      // API de ThingSpeak con tu Read API Key
-      const response = await fetch(
-        'https://api.thingspeak.com/channels/2988488/fields/1.json?api_key=Z6SC5MLLP0FR4PC4&results=50',
-        { 
-          method: 'GET',
-          mode: 'cors',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`ThingSpeak API error: ${response.status}`)
-      }
-
-      const data = await response.json()
-      console.log('📊 [THINGSPEAK] Datos recibidos:', data)
-
-      if (data.feeds && data.feeds.length > 0) {
-        // Convertir formato ThingSpeak a formato PhReading
-        const thingSpeakReadings: PhReading[] = data.feeds
-          .filter((feed: any) => feed.field1 !== null)
-          .map((feed: any, index: number) => ({
-            id: `ts_${feed.entry_id || index}`,
-            ph: parseFloat(feed.field1),
-            device: 'ThingSpeak',
-            created_at: feed.created_at
-          }))
-
-        setThingSpeakData(thingSpeakReadings)
-        console.log('✅ [THINGSPEAK] Datos procesados:', thingSpeakReadings.length)
-        return thingSpeakReadings
-      }
-      
-      return []
-    } catch (err) {
-      console.error('❌ [THINGSPEAK] Error:', err)
-      return []
-    }
-  }, [])
 
   useEffect(() => {
     fetchReadings()
