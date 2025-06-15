@@ -1,202 +1,170 @@
-# Dashboard pH Metro
+# 🌊 pH Metro Dashboard - Sistema Dual IoT
 
-Sistema de monitoreo de pH en tiempo real con Arduino ESP8266, Next.js y Supabase.
+![pH Meter](https://img.shields.io/badge/pH%20Meter-IoT%20System-blue)
+![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![Supabase](https://img.shields.io/badge/Supabase-Database-green)
+![ThingSpeak](https://img.shields.io/badge/ThingSpeak-IoT%20Cloud-orange)
+![ESP8266](https://img.shields.io/badge/ESP8266-WiFi%20Module-red)
 
-## 🚀 Características
+## 🎯 **Sistema de Monitoreo de pH en Tiempo Real**
 
-- 📊 **Dashboard en tiempo real** con gráficos interactivos
-- 🔄 **Actualizaciones automáticas** mediante WebSockets
-- 📱 **Diseño responsivo** compatible con móviles y escritorio
-- 📈 **Estadísticas detalladas** (promedio, tendencias, rangos)
-- 🎯 **Alertas visuales** para niveles críticos de pH
-- 🗄️ **Base de datos Supabase** para almacenamiento confiable
-- ☁️ **Desplegado en Vercel** para acceso global
+Dashboard web profesional para monitoreo de niveles de pH con **sistema dual de almacenamiento** y **transmisión redundante** desde Arduino UNO + ESP8266.
 
-## 🛠️ Tecnologías
+### 🌐 **Demo Live**
+- **Dashboard Principal**: [phmetro-phi.vercel.app](https://phmetro-phi.vercel.app)
+- **ThingSpeak Channel**: [Canal 2988488](https://thingspeak.com/channels/2988488)
+---
 
-### Frontend
-- **Next.js 14** (App Router)
-- **React 18** con TypeScript
-- **Tailwind CSS** para estilos
-- **Recharts** para gráficos
-- **Lucide React** para iconos
+## �️ **Arquitectura del Sistema**
 
-### Backend
-- **Supabase** (PostgreSQL)
-- **API Routes** de Next.js
-- **Real-time subscriptions**
-
-### Hardware
-- **ESP8266** (NodeMCU)
-- **Sensor de pH** analógico
-- **WiFi** para conectividad
-
-## 📋 Requisitos
-
-- Node.js 18+
-- Cuenta de Supabase
-- Cuenta de Vercel
-- Arduino ESP8266
-
-## 🔧 Configuración
-
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/tu-usuario/phmetro-dashboard.git
-cd phmetro-dashboard
+```
+┌─────────────────┐    HTTPS SSL     ┌─────────────────┐    HTTPS    ┌─────────────────┐
+│   ESP8266       │ ──────────────► │ Cloudflare      │ ──────────► │   Dashboard     │
+│   Arduino UNO   │     Port 443     │ Worker (Proxy)  │             │   (Vercel)      │
+└─────────────────┘                  └─────────────────┘             └─────────────────┘
+       │                                                                       │
+       │                                                                       ▼
+       │             HTTP                                               ┌─────────────────┐
+       └─────────────────────────────────────────────────────────────► │   Supabase      │
+                    Port 80                                             │   Database      │
+                      │                                                 └─────────────────┘
+                      ▼                                                          ▲
+               ┌─────────────────┐                                              │
+               │   ThingSpeak    │ ─────────────────────────────────────────────┘
+               │   IoT Cloud     │           Dashboard lee ambas fuentes
+               └─────────────────┘
 ```
 
-### 2. Instalar dependencias
+## ✨ **Características Principales**
 
+### 📊 **Dashboard Inteligente**
+- **Gráficos en tiempo real** con Chart.js
+- **Selector de fuente de datos** (Supabase/ThingSpeak/Ambas)
+- **Estadísticas avanzadas** por fuente
+- **Responsive design** con Tailwind CSS
+- **Actualizaciones automáticas** cada 30 segundos
+
+### 🔄 **Sistema Dual de Transmisión**
+- **Primario**: Dashboard via HTTPS SSL → Vercel → Supabase
+- **Backup**: ThingSpeak via HTTP → IoT Cloud
+- **Redundancia**: Si falla uno, el otro continúa
+- **Análisis**: Dashboard personalizado + herramientas IoT
+
+### 🌐 **ESP8266 WiFi Robusto**
+- **Conexión HTTPS SSL** nativa
+- **Manejo de errores** avanzado
+- **Reconexión automática**
+- **Logs detallados** por destino
+
+---
+
+## 🚀 **Inicio Rápido**
+
+### **1. Clonar Repositorio**
+```bash
+git clone https://github.com/Segesp/phmetro.git
+cd phmetro
+```
+
+### **2. Instalar Dependencias**
 ```bash
 npm install
 ```
 
-### 3. Configurar Supabase
-
-1. Crear una cuenta en [Supabase](https://supabase.com)
-2. Crear un nuevo proyecto
-3. Ejecutar el siguiente SQL en el SQL Editor:
-
-```sql
--- Crear tabla para lecturas de pH
-CREATE TABLE ph_readings (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  ph DECIMAL(4,2) NOT NULL CHECK (ph >= 0 AND ph <= 14),
-  timestamp TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Crear índice para mejorar consultas
-CREATE INDEX idx_ph_readings_created_at ON ph_readings(created_at DESC);
-
--- Habilitar Row Level Security
-ALTER TABLE ph_readings ENABLE ROW LEVEL SECURITY;
-
--- Crear política para permitir inserción
-CREATE POLICY "Allow insert ph_readings" ON ph_readings
-  FOR INSERT WITH CHECK (true);
-
--- Crear política para permitir lectura
-CREATE POLICY "Allow select ph_readings" ON ph_readings
-  FOR SELECT USING (true);
-
--- Habilitar realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE ph_readings;
+### **3. Configurar Variables de Entorno**
+```bash
+cp .env.local.example .env.local
+# Editar .env.local con tus credenciales de Supabase
 ```
 
-### 4. Variables de entorno
-
-Crear `.env.local` basado en `.env.local.example`:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=tu_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=tu_supabase_service_role_key
-```
-
-### 5. Ejecutar en desarrollo
-
+### **4. Ejecutar Dashboard**
 ```bash
 npm run dev
+# Abrir http://localhost:3000
 ```
 
-Abrir [http://localhost:3000](http://localhost:3000)
-
-## 📱 Configuración del Arduino
-
-1. Instalar librerías necesarias:
-   - ESP8266WiFi
-   - ESP8266HTTPClient
-
-2. Configurar el código Arduino:
-   - Actualizar credenciales WiFi
-   - Verificar la URL de la API
-   - Calibrar el sensor de pH
-
-3. Cargar el programa al ESP8266
-
-## 🚀 Despliegue en Vercel
-
-### 1. Conectar repositorio
-
-1. Ir a [Vercel](https://vercel.com)
-2. Importar el repositorio de GitHub
-3. Configurar las variables de entorno
-
-### 2. Variables de entorno en Vercel
-
-Agregar las mismas variables del archivo `.env.local`:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-
-### 3. Desplegar
-
-Vercel desplegará automáticamente en cada push a la rama principal.
-
-## 📊 API Endpoints
-
-### POST /api/ph-data
-Recibe datos del Arduino:
-```json
-{
-  "ph": 7.2,
-  "timestamp": "2024-01-01T12:00:00Z"
-}
+### **5. Configurar Arduino**
+```cpp
+// En Codigo_Arduino_UNO_ESP8266_OPTIMIZADO.ino
+const char* ssid = "TU_WIFI";
+const char* password = "TU_PASSWORD";
 ```
-
-### GET /api/ph-data
-Obtiene las últimas 100 lecturas:
-```json
-{
-  "success": true,
-  "data": [...]
-}
-```
-
-## 🔧 Funcionalidades del Dashboard
-
-- **Gráfico en tiempo real**: Visualización de tendencias de pH
-- **Tarjetas de estadísticas**: pH actual, promedio, rango y tendencia
-- **Lecturas recientes**: Lista de las últimas mediciones
-- **Indicadores de estado**: Códigos de color para niveles óptimos
-- **Actualizaciones automáticas**: Sin necesidad de recargar la página
-
-## 🎯 Rangos de pH
-
-- **Óptimo**: 6.5 - 8.5 (Verde)
-- **Aceptable**: 6.0 - 9.0 (Amarillo)
-- **Crítico**: < 6.0 o > 9.0 (Rojo)
-
-## 📝 Personalización
-
-### Modificar rangos de pH
-Editar los valores en `app/page.tsx` y `components/StatsCards.tsx`
-
-### Cambiar frecuencia de lecturas
-Modificar el `delay()` en el código Arduino
-
-### Personalizar estilos
-Editar `tailwind.config.js` y `app/globals.css`
-
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crear rama feature (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT.
-
-## 🆘 Soporte
-
-Para reportar bugs o solicitar funcionalidades, crear un [issue](https://github.com/tu-usuario/phmetro-dashboard/issues).
 
 ---
 
-**Desarrollado con ❤️ para monitoreo de pH en tiempo real**
+## 📁 **Archivos Principales**
+
+| Archivo | Descripción |
+|---------|-------------|
+| `Codigo_Arduino_UNO_ESP8266_OPTIMIZADO.ino` ⭐ | Código Arduino principal (sistema dual) |
+| `Codigo_Arduino_UNO_ESP8266_ULTRA_SIMPLE.ino` 🔧 | Código Arduino simplificado (backup) |
+| `app/page.tsx` | Dashboard principal con selector de fuentes |
+| `cloudflare-worker.js` | Worker proxy HTTPS |
+| `test_dual_envio.sh` | Script de pruebas dual |
+| `diagnostico_https.sh` | Script diagnóstico conectividad |
+
+---
+
+## 🔧 **APIs Configuradas**
+
+### **ThingSpeak**
+```bash
+Write API Key: I4RFD6P62MTKOR8E
+Read API Key:  Z6SC5MLLP0FR4PC4
+Channel ID:    2988488
+URL: https://thingspeak.com/channels/2988488
+```
+
+### **Dashboard**
+```bash
+Cloudflare Worker: esp8266-phmetro-proxy.20200205.workers.dev
+Vercel Dashboard: phmetro-phi.vercel.app
+Database: Supabase (tiempo real)
+```
+
+---
+
+## 🧪 **Testing**
+
+### **Probar Sistema Dual**
+```bash
+./test_dual_envio.sh 7.35
+```
+
+### **Diagnóstico HTTPS**
+```bash
+./diagnostico_https.sh
+```
+
+### **API Manual**
+```bash
+# Dashboard
+curl -X POST https://esp8266-phmetro-proxy.20200205.workers.dev/api/ph-proxy \
+  -H "Content-Type: application/json" \
+  -d '{"ph": 7.0, "device": "TEST"}'
+
+# ThingSpeak
+curl "https://api.thingspeak.com/update?api_key=I4RFD6P62MTKOR8E&field1=7.0"
+```
+
+---
+
+## 📚 **Documentación**
+
+- 📖 **[Sistema Dual](SISTEMA_DUAL_DASHBOARD_THINGSPEAK.md)** - Configuración completa
+- 🔒 **[HTTPS Setup](ACTUALIZACION_HTTPS_SSL.md)** - Configuración SSL
+- ☁️ **[Cloudflare Guide](CLOUDFLARE_SETUP_GUIDE.md)** - Worker setup
+- 📱 **[Arduino Codes](CODIGOS_ARDUINO_HTTPS_FINAL.md)** - Resumen códigos
+
+---
+
+## 🎯 **Estado del Proyecto**
+
+**✅ Dashboard: FUNCIONANDO**  
+**✅ Arduino: LISTO**  
+**✅ APIs: CONFIGURADAS**  
+**✅ Sistema Dual: IMPLEMENTADO**
+
+---
+
+*Desarrollado con ❤️ para monitoreo IoT profesional*
