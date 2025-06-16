@@ -8,10 +8,20 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function POST(request: NextRequest) {
   try {
+    // Log de configuración para debug
+    console.log('🔧 [PH-PROXY] Config:', {
+      url: supabaseUrl,
+      hasKey: !!supabaseKey,
+      keyLength: supabaseKey?.length,
+      environment: process.env.NODE_ENV
+    })
+    
     const body = await request.json()
+    console.log('📥 [PH-PROXY] Datos recibidos:', body)
     
     // Validar datos básicos
     if (!body.ph || isNaN(parseFloat(body.ph))) {
+      console.log('❌ [PH-PROXY] Validación fallida:', body)
       return NextResponse.json(
         { error: 'pH value is required and must be a number' },
         { status: 400 }
@@ -27,18 +37,21 @@ export async function POST(request: NextRequest) {
     console.log('📊 [PH-PROXY] Datos a insertar:', phData)
 
     // Insertar en Supabase
+    console.log('💾 [PH-PROXY] Insertando en Supabase...')
     const { data, error } = await supabase
       .from('ph_readings')
       .insert([phData])
 
     if (error) {
-      console.error('Supabase error:', error)
+      console.error('❌ [PH-PROXY] Supabase error:', error)
       return NextResponse.json(
         { error: 'Database error', details: error.message },
         { status: 500 }
       )
     }
 
+    console.log('✅ [PH-PROXY] Inserción exitosa:', data)
+    
     // Respuesta exitosa
     return NextResponse.json(
       { 

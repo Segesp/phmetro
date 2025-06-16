@@ -8,11 +8,19 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔧 [PH-DATA] Config:', {
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://japrhhtnijidlecqrkpk.supabase.co',
+      hasKey: !!(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'fallback'),
+      environment: process.env.NODE_ENV
+    })
+    
     const body = await request.json()
+    console.log('📥 [PH-DATA] Datos recibidos:', body)
     const { ph, timestamp } = body
 
     // Validar datos
     if (typeof ph !== 'number' || ph < 0 || ph > 14) {
+      console.log('❌ [PH-DATA] Validación fallida:', { ph, type: typeof ph })
       return NextResponse.json(
         { error: 'Valor de pH inválido' },
         { status: 400 }
