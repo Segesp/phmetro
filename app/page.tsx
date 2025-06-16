@@ -333,9 +333,61 @@ export default function Dashboard() {
   }, [fetchReadings, fetchThingSpeakData, autoSyncThingSpeak])
 
   const getPhStatus = (ph: number) => {
-    if (ph >= 6.5 && ph <= 8.5) return { status: 'Óptimo', class: 'ph-safe', color: 'text-green-600' }
-    if (ph >= 6.0 && ph <= 9.0) return { status: 'Aceptable', class: 'ph-warning', color: 'text-yellow-600' }
-    return { status: 'Crítico', class: 'ph-danger', color: 'text-red-600' }
+    // Rango crítico: fuera de 6-9
+    if (ph < 6.0) {
+      return { 
+        status: 'CRÍTICO - pH Muy Bajo', 
+        class: 'ph-critical', 
+        color: 'text-red-700',
+        bgColor: 'bg-red-100',
+        borderColor: 'border-red-300',
+        icon: '🚨'
+      }
+    }
+    if (ph > 9.0) {
+      return { 
+        status: 'CRÍTICO - pH Muy Alto', 
+        class: 'ph-critical', 
+        color: 'text-red-700',
+        bgColor: 'bg-red-100',
+        borderColor: 'border-red-300',
+        icon: '🚨'
+      }
+    }
+    
+    // Zona de advertencia: 6-6.5 (pH bajo)
+    if (ph >= 6.0 && ph < 6.5) {
+      return { 
+        status: 'ADVERTENCIA - pH Bajo', 
+        class: 'ph-warning-low', 
+        color: 'text-orange-700',
+        bgColor: 'bg-orange-100',
+        borderColor: 'border-orange-300',
+        icon: '⚠️'
+      }
+    }
+    
+    // Zona de advertencia: 8.5-9 (pH alto)
+    if (ph > 8.5 && ph <= 9.0) {
+      return { 
+        status: 'ADVERTENCIA - pH Alto', 
+        class: 'ph-warning-high', 
+        color: 'text-orange-700',
+        bgColor: 'bg-orange-100',
+        borderColor: 'border-orange-300',
+        icon: '⚠️'
+      }
+    }
+    
+    // Rango óptimo: 6.5-8.5
+    return { 
+      status: 'Óptimo', 
+      class: 'ph-safe', 
+      color: 'text-green-700',
+      bgColor: 'bg-green-100',
+      borderColor: 'border-green-300',
+      icon: '✅'
+    }
   }
 
   const getFilterDescription = () => {
@@ -557,24 +609,53 @@ export default function Dashboard() {
 
       {/* Current pH Status */}
       {currentPh !== null && (
-        <div className="mb-8 p-6 bg-white rounded-lg shadow-md border border-gray-200">
+        <div className={`mb-8 p-6 rounded-lg shadow-md border-2 ${getPhStatus(currentPh).bgColor} ${getPhStatus(currentPh).borderColor}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-blue-100 rounded-full">
                 <Droplets className="h-8 w-8 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">
+                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
                   pH: {currentPh.toFixed(2)}
+                  <span className="text-2xl">{getPhStatus(currentPh).icon}</span>
                 </h2>
-                <span className={`text-lg font-medium ${getPhStatus(currentPh).color}`}>
+                <span className={`text-lg font-bold ${getPhStatus(currentPh).color}`}>
                   {getPhStatus(currentPh).status}
                 </span>
+                {/* Información adicional según el estado */}
+                <div className="mt-2 text-sm">
+                  {currentPh < 6.0 && (
+                    <p className="text-red-700 font-medium">
+                      🚨 Agua demasiado ácida. Riesgo para la salud.
+                    </p>
+                  )}
+                  {currentPh > 9.0 && (
+                    <p className="text-red-700 font-medium">
+                      🚨 Agua demasiado alcalina. Riesgo para la salud.
+                    </p>
+                  )}
+                  {currentPh >= 6.0 && currentPh < 6.5 && (
+                    <p className="text-orange-700 font-medium">
+                      ⚠️ pH ligeramente bajo. Monitorear de cerca.
+                    </p>
+                  )}
+                  {currentPh > 8.5 && currentPh <= 9.0 && (
+                    <p className="text-orange-700 font-medium">
+                      ⚠️ pH ligeramente alto. Monitorear de cerca.
+                    </p>
+                  )}
+                  {currentPh >= 6.5 && currentPh <= 8.5 && (
+                    <p className="text-green-700 font-medium">
+                      ✅ Agua en condiciones óptimas para consumo.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                ✅ Datos Reales
+              <div className={`px-3 py-1 rounded-full text-sm font-medium ${getPhStatus(currentPh).bgColor} ${getPhStatus(currentPh).color} border ${getPhStatus(currentPh).borderColor}`}>
+                📊 Datos en Tiempo Real
               </div>
               <p className="text-xs text-gray-500 mt-1">
                 {readings.length} de {allReadings.length} lecturas 

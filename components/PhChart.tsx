@@ -165,45 +165,84 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
             activeDot={{ r: 4, fill: '#1d4ed8' }}
             connectNulls={false}
           />
-          {/* Líneas de referencia para niveles óptimos */}
+          {/* Líneas de referencia para diferentes zonas */}
+          {/* Línea crítica inferior - pH 6.0 */}
+          <Line 
+            type="monotone" 
+            dataKey={() => 6.0} 
+            stroke="#dc2626" 
+            strokeDasharray="3 3"
+            strokeWidth={1}
+            dot={false}
+          />
+          {/* Línea de advertencia inferior - pH 6.5 */}
           <Line 
             type="monotone" 
             dataKey={() => 6.5} 
-            stroke="#22c55e" 
+            stroke="#f59e0b" 
             strokeDasharray="5 5"
             strokeWidth={1}
             dot={false}
           />
+          {/* Línea de advertencia superior - pH 8.5 */}
           <Line 
             type="monotone" 
             dataKey={() => 8.5} 
-            stroke="#22c55e" 
+            stroke="#f59e0b" 
             strokeDasharray="5 5"
+            strokeWidth={1}
+            dot={false}
+          />
+          {/* Línea crítica superior - pH 9.0 */}
+          <Line 
+            type="monotone" 
+            dataKey={() => 9.0} 
+            stroke="#dc2626" 
+            strokeDasharray="3 3"
             strokeWidth={1}
             dot={false}
           />
         </LineChart>
       </ResponsiveContainer>
-      <div className="mt-2 flex justify-between items-center text-xs text-gray-500">
-        <div className="flex items-center space-x-4">
+      <div className="mt-3 space-y-2">
+        {/* Primera fila - Datos y rangos */}
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <span className="inline-block w-3 h-0.5 bg-blue-500 mr-1"></span>
+              Datos de pH ({data.length} puntos)
+            </div>
+            <div className="flex items-center">
+              <span className="inline-block w-3 h-0.5 bg-amber-500 mr-1"></span>
+              Zona Óptima: 6.5 - 8.5 pH
+            </div>
+          </div>
+          {(filterType === 'day' || filterType === 'week' || filterType === 'month') && (
+            <div className="text-right">
+              <span className="text-gray-600">
+                {filterType === 'day' && 'Últimas 24 horas'}
+                {filterType === 'week' && 'Últimos 7 días'}
+                {filterType === 'month' && 'Últimos 30 días'}
+              </span>
+            </div>
+          )}
+        </div>
+        
+        {/* Segunda fila - Zonas de alerta */}
+        <div className="flex items-center space-x-4 text-xs">
           <div className="flex items-center">
-            <span className="inline-block w-3 h-0.5 bg-green-500 mr-1"></span>
-            Rango óptimo: 6.5 - 8.5 pH
+            <span className="inline-block w-3 h-0.5 bg-red-600 mr-1" style={{borderTop: '1px dashed'}}></span>
+            <span className="text-red-600">Crítico: &lt;6.0 o &gt;9.0</span>
           </div>
           <div className="flex items-center">
-            <span className="inline-block w-3 h-0.5 bg-blue-500 mr-1"></span>
-            Datos de pH ({data.length} puntos)
+            <span className="inline-block w-3 h-0.5 bg-orange-500 mr-1" style={{borderTop: '1px dashed'}}></span>
+            <span className="text-orange-600">Advertencia: 6.0-6.5 o 8.5-9.0</span>
+          </div>
+          <div className="flex items-center">
+            <span className="inline-block w-3 h-0.5 bg-green-600 mr-1"></span>
+            <span className="text-green-600">Seguro: 6.5-8.5</span>
           </div>
         </div>
-        {(filterType === 'day' || filterType === 'week' || filterType === 'month') && (
-          <div className="text-right">
-            <span className="text-gray-600">
-              {filterType === 'day' && 'Últimas 24 horas'}
-              {filterType === 'week' && 'Últimos 7 días'}
-              {filterType === 'month' && 'Últimos 30 días'}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   )

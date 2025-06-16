@@ -21,6 +21,21 @@ export default function StatsCards({ readings }: StatsCardsProps) {
     )
   }
 
+  // Función para determinar estado del pH (misma lógica que el dashboard)
+  const getPhStatusColor = (ph: number) => {
+    if (ph < 6.0 || ph > 9.0) return 'from-red-500 to-red-600' // Crítico
+    if ((ph >= 6.0 && ph < 6.5) || (ph > 8.5 && ph <= 9.0)) return 'from-orange-500 to-orange-600' // Advertencia
+    return 'from-green-500 to-green-600' // Óptimo
+  }
+
+  const getPhStatusText = (ph: number) => {
+    if (ph < 6.0) return '🚨 Crítico Bajo'
+    if (ph > 9.0) return '🚨 Crítico Alto'
+    if (ph >= 6.0 && ph < 6.5) return '⚠️ Advertencia Bajo'
+    if (ph > 8.5 && ph <= 9.0) return '⚠️ Advertencia Alto'
+    return '✅ Óptimo'
+  }
+
   const currentPh = readings[0]?.ph || 0
   const phValues = readings.map(r => r.ph)
   const avgPh = phValues.reduce((a, b) => a + b, 0) / phValues.length
@@ -34,38 +49,41 @@ export default function StatsCards({ readings }: StatsCardsProps) {
   const previousAvg = previous.reduce((a, b) => a + b, 0) / previous.length
   const trend = recentAvg - previousAvg
 
-  // Calcular estadísticas por fuente
-  const supabaseCount = readings.filter(r => r.device !== 'ThingSpeak').length
-  const thingSpeakCount = readings.filter(r => r.device === 'ThingSpeak').length
+  // Calcular estadísticas de estados
+  const criticalCount = phValues.filter(ph => ph < 6.0 || ph > 9.0).length
+  const warningCount = phValues.filter(ph => (ph >= 6.0 && ph < 6.5) || (ph > 8.5 && ph <= 9.0)).length
+  const optimalCount = phValues.filter(ph => ph >= 6.5 && ph <= 8.5).length
   
   const stats = [
     {
       title: 'pH Actual',
       value: currentPh.toFixed(2),
       icon: Activity,
-      color: 'from-blue-500 to-blue-600',
-      subtitle: `Fuente: ${readings[0]?.device || 'Arduino'}`
+      color: getPhStatusColor(currentPh),
+      subtitle: getPhStatusText(currentPh)
     },
     {
-      title: 'pH Promedio',
-      value: avgPh.toFixed(2),
+      title: 'Estado General',
+      value: `${Math.round((optimalCount / readings.length) * 100)}%`,
       icon: TrendingUp,
-      color: 'from-green-500 to-green-600',
-      subtitle: `${readings.length} lecturas`
+      color: optimalCount > warningCount + criticalCount ? 'from-green-500 to-green-600' : 
+             warningCount > criticalCount ? 'from-orange-500 to-orange-600' : 'from-red-500 to-red-600',
+      subtitle: `${optimalCount} óptimas de ${readings.length}`
     },
     {
-      title: 'Fuentes Datos',
-      value: `${supabaseCount + thingSpeakCount}`,
+      title: 'Rango pH',
+      value: `${minPh.toFixed(1)}-${maxPh.toFixed(1)}`,
       icon: TrendingDown,
       color: 'from-purple-500 to-purple-600',
-      subtitle: `DB:${supabaseCount} TS:${thingSpeakCount}`
+      subtitle: `Promedio: ${avgPh.toFixed(2)}`
     },
     {
-      title: 'Tendencia',
-      value: trend > 0 ? '+' + trend.toFixed(2) : trend.toFixed(2),
+      title: 'Alertas',
+      value: `${criticalCount + warningCount}`,
       icon: trend > 0 ? TrendingUp : TrendingDown,
-      color: trend > 0 ? 'from-orange-500 to-orange-600' : 'from-red-500 to-red-600',
-      subtitle: 'Últimas lecturas'
+      color: criticalCount > 0 ? 'from-red-500 to-red-600' : 
+             warningCount > 0 ? 'from-orange-500 to-orange-600' : 'from-green-500 to-green-600',
+      subtitle: `${criticalCount} críticas, ${warningCount} advertencias`
     }
   ]
 
