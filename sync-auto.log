@@ -1,209 +1,37 @@
-nohup: ignoring input
 🚀 Sincronización Automática Iniciada
-📅 Mon Jun 16 01:41:28 UTC 2025
-🔧 PID: 37746
+📅 Mon Jun 16 03:34:12 UTC 2025
+🔧 PID: 24871
 📝 Log: sync.log
-🛑 Para detener: kill 37746
+🛑 Para detener: kill 24871
 ⏰ Intervalo: 30 segundos
 
-🔄 Sync #1 - 01:41:28
-✅ 3 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #2 - 01:41:59
+🔄 Sync #1 - 03:34:12
 ✅ 1 nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #3 - 01:42:30
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #4 - 01:43:00
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #5 - 01:43:31
+🔄 Sync #2 - 03:34:43
 ✅ 2 nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #6 - 01:44:02
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #7 - 01:44:32
+🔄 Sync #3 - 03:35:14
 ✅ 1 nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #8 - 01:45:03
+🔄 Sync #4 - 03:35:44
 ✅ 1 nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #9 - 01:45:33
+🔄 Sync #5 - 03:36:15
 ✅ 1 nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #10 - 01:46:04
+🔄 Sync #6 - 03:36:46
 ✅ 1 nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #11 - 01:46:35
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #12 - 01:47:06
+🔄 Sync #7 - 03:37:16
 ✅ 1 nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #13 - 01:47:36
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #14 - 01:48:07
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #15 - 01:48:38
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #16 - 01:49:09
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #17 - 01:49:39
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #18 - 01:50:10
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #19 - 01:50:41
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #20 - 01:51:11
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #21 - 01:51:42
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #22 - 01:52:13
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #23 - 01:52:43
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #24 - 01:53:14
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #25 - 01:53:45
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #26 - 01:54:15
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #27 - 01:54:46
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #28 - 01:55:17
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #29 - 01:55:47
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #30 - 01:56:18
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #31 - 01:56:49
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #32 - 01:57:20
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #33 - 01:57:50
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #34 - 01:58:21
+🔄 Sync #8 - 03:37:47
 ✅  nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #35 - 01:58:51
-✅ 3 nuevos registros
+🔄 Sync #9 - 03:38:17
+✅  nuevos registros
 ⏸️  Esperando 30s...
-🔄 Sync #36 - 01:59:22
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #37 - 01:59:52
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #38 - 02:00:23
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #39 - 02:00:54
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #40 - 02:01:24
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #41 - 02:01:55
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #42 - 02:02:26
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #43 - 02:02:56
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #44 - 02:03:27
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #45 - 02:03:58
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #46 - 02:04:28
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #47 - 02:04:59
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #48 - 02:05:29
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #49 - 02:06:00
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #50 - 02:06:31
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #51 - 02:07:01
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #52 - 02:07:32
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #53 - 02:08:03
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #54 - 02:08:33
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #55 - 02:09:04
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #56 - 02:09:35
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #57 - 02:10:05
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #58 - 02:10:36
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #59 - 02:11:06
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #60 - 02:11:37
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #61 - 02:12:08
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #62 - 02:12:39
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #63 - 02:13:09
-✅ 2 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #64 - 02:13:40
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #65 - 02:14:11
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #66 - 02:14:41
-✅ 1 nuevos registros
-⏸️  Esperando 30s...
-🔄 Sync #67 - 02:15:12
+🔄 Sync #10 - 03:38:48
 ✅ 2 nuevos registros
 ⏸️  Esperando 30s...
