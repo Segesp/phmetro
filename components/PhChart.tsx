@@ -10,36 +10,33 @@ interface PhChartProps {
 
 export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
   const getTimeFormat = (reading: PhReading) => {
-    // Convertir a zona horaria de Perú (UTC-5)
     const date = new Date(reading.created_at)
-    const peruDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Lima"}))
     
     switch (filterType) {
       case 'day':
         // Para 24 horas: mostrar hora:minuto
-        return peruDate.toLocaleTimeString('es-PE', {
+        return date.toLocaleTimeString('es-PE', {
           hour: '2-digit',
           minute: '2-digit',
           timeZone: 'America/Lima'
         })
       case 'week':
-        // Para 7 días: mostrar día y hora
-        return peruDate.toLocaleDateString('es-PE', {
+        // Para 7 días: mostrar día y fecha
+        return date.toLocaleDateString('es-PE', {
           weekday: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
+          day: '2-digit',
           timeZone: 'America/Lima'
         })
       case 'month':
         // Para 30 días: mostrar día/mes
-        return peruDate.toLocaleDateString('es-PE', {
+        return date.toLocaleDateString('es-PE', {
           day: '2-digit',
           month: '2-digit',
           timeZone: 'America/Lima'
         })
       case 'dayOfWeek':
         // Para día específico: mostrar fecha y hora
-        return peruDate.toLocaleDateString('es-PE', {
+        return date.toLocaleDateString('es-PE', {
           day: '2-digit',
           month: '2-digit',
           hour: '2-digit',
@@ -48,13 +45,13 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
         })
       case 'monthOfYear':
         // Para mes específico: mostrar día
-        return peruDate.toLocaleDateString('es-PE', {
+        return date.toLocaleDateString('es-PE', {
           day: '2-digit',
           timeZone: 'America/Lima'
         })
       default:
         // Por defecto: hora:minuto
-        return peruDate.toLocaleTimeString('es-PE', {
+        return date.toLocaleTimeString('es-PE', {
           hour: '2-digit',
           minute: '2-digit',
           timeZone: 'America/Lima'
@@ -66,33 +63,28 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
     if (data.length === 0) return []
     
     // Obtener la fecha actual en zona horaria de Perú
-    const nowUTC = new Date()
-    const now = new Date(nowUTC.toLocaleString("en-US", {timeZone: "America/Lima"}))
+    const now = new Date()
     
     let startDate: Date
     let interval: number
-    let timeUnit: 'hour' | 'day' | 'month'
     
     switch (filterType) {
       case 'day':
-        // Últimas 24 horas, intervalos de 1 hora
+        // Últimas 24 horas, intervalos de 2 horas para mejor visualización
         startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-        interval = 60 * 60 * 1000 // 1 hora en ms
-        timeUnit = 'hour'
+        interval = 2 * 60 * 60 * 1000 // 2 horas en ms
         break
       case 'week':
         // Últimos 7 días, intervalos de 1 día
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
         startDate.setHours(0, 0, 0, 0) // Empezar al inicio del día
         interval = 24 * 60 * 60 * 1000 // 1 día en ms
-        timeUnit = 'day'
         break
       case 'month':
-        // Últimos 30 días, intervalos de 1 día
+        // Últimos 30 días, intervalos de 2 días para mejor visualización
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
         startDate.setHours(0, 0, 0, 0) // Empezar al inicio del día
-        interval = 24 * 60 * 60 * 1000 // 1 día en ms
-        timeUnit = 'day'
+        interval = 2 * 24 * 60 * 60 * 1000 // 2 días en ms
         break
       default:
         // Para otros filtros, usar los datos tal como están
@@ -126,19 +118,26 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
     let currentDate = new Date(startDate)
     
     while (currentDate <= endDate) {
-      // Buscar datos reales para este punto de tiempo
-      const tolerance = interval / 2 // Tolerancia de media hora/medio día
-      const matchingReading = data.find(reading => {
+      // Buscar el dato más cercano para este punto de tiempo
+      const tolerance = interval // Usar todo el intervalo como tolerancia
+      let closestReading: PhReading | null = null
+      let closestDistance = Infinity
+      
+      for (const reading of data) {
         const readingDate = new Date(reading.created_at)
-        return Math.abs(readingDate.getTime() - currentDate.getTime()) < tolerance
-      })
+        const distance = Math.abs(readingDate.getTime() - currentDate.getTime())
+        if (distance < tolerance && distance < closestDistance) {
+          closestReading = reading
+          closestDistance = distance
+        }
+      }
       
       const timeFormat = getTimeFormatForDate(currentDate, filterType)
       
-      if (matchingReading) {
+      if (closestReading) {
         timePoints.push({
           time: timeFormat,
-          ph: matchingReading.ph,
+          ph: closestReading.ph,
           fullTime: currentDate.toLocaleString('es-PE', {
             timeZone: 'America/Lima',
             year: 'numeric',
@@ -152,6 +151,7 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
           hasData: true
         })
       } else {
+        // Agregar punto sin datos para mostrar hueco en el gráfico
         timePoints.push({
           time: timeFormat,
           ph: null,
@@ -176,30 +176,30 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
   }
 
   const getTimeFormatForDate = (date: Date, filterType: string) => {
-    // Convertir a zona horaria de Perú
-    const peruDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Lima"}))
-    
     switch (filterType) {
       case 'day':
-        return peruDate.toLocaleTimeString('es-PE', {
+        // Para 24 horas: mostrar hora:minuto (ej: "14:30")
+        return date.toLocaleTimeString('es-PE', {
           hour: '2-digit',
           minute: '2-digit',
           timeZone: 'America/Lima'
         })
       case 'week':
-        return peruDate.toLocaleDateString('es-PE', {
+        // Para 7 días: mostrar día abreviado y fecha (ej: "Lun 16")
+        return date.toLocaleDateString('es-PE', {
           weekday: 'short',
           day: '2-digit',
           timeZone: 'America/Lima'
         })
       case 'month':
-        return peruDate.toLocaleDateString('es-PE', {
+        // Para 30 días: mostrar día/mes (ej: "16/06")
+        return date.toLocaleDateString('es-PE', {
           day: '2-digit',
           month: '2-digit',
           timeZone: 'America/Lima'
         })
       default:
-        return peruDate.toLocaleTimeString('es-PE', {
+        return date.toLocaleTimeString('es-PE', {
           hour: '2-digit',
           minute: '2-digit',
           timeZone: 'America/Lima'
