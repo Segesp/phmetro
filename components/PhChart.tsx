@@ -59,122 +59,6 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
     }
   }
 
-  const generateCompleteTimeRange = (data: PhReading[], filterType: string) => {
-    if (data.length === 0) return []
-    
-    // Obtener la fecha actual en zona horaria de Perú
-    const now = new Date()
-    
-    let startDate: Date
-    let interval: number
-    
-    switch (filterType) {
-      case 'day':
-        // Últimas 24 horas, intervalos de 2 horas para mejor visualización
-        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-        interval = 2 * 60 * 60 * 1000 // 2 horas en ms
-        break
-      case 'week':
-        // Últimos 7 días, intervalos de 1 día
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        startDate.setHours(0, 0, 0, 0) // Empezar al inicio del día
-        interval = 24 * 60 * 60 * 1000 // 1 día en ms
-        break
-      case 'month':
-        // Últimos 30 días, intervalos de 2 días para mejor visualización
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-        startDate.setHours(0, 0, 0, 0) // Empezar al inicio del día
-        interval = 2 * 24 * 60 * 60 * 1000 // 2 días en ms
-        break
-      default:
-        // Para otros filtros, usar los datos tal como están
-        return data.map(reading => ({
-          time: getTimeFormat(reading),
-          ph: reading.ph,
-          fullTime: new Date(reading.created_at).toLocaleString('es-PE', {
-            timeZone: 'America/Lima',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-          }),
-          rawDate: new Date(reading.created_at),
-          hasData: true
-        }))
-    }
-    
-    // Crear array de todos los puntos de tiempo en el rango
-    const timePoints: Array<{
-      time: string
-      ph: number | null
-      fullTime: string
-      rawDate: Date
-      hasData: boolean
-    }> = []
-    
-    const endDate = new Date(now)
-    let currentDate = new Date(startDate)
-    
-    while (currentDate <= endDate) {
-      // Buscar el dato más cercano para este punto de tiempo
-      const tolerance = interval // Usar todo el intervalo como tolerancia
-      let closestReading: PhReading | null = null
-      let closestDistance = Infinity
-      
-      for (const reading of data) {
-        const readingDate = new Date(reading.created_at)
-        const distance = Math.abs(readingDate.getTime() - currentDate.getTime())
-        if (distance < tolerance && distance < closestDistance) {
-          closestReading = reading
-          closestDistance = distance
-        }
-      }
-      
-      const timeFormat = getTimeFormatForDate(currentDate, filterType)
-      
-      if (closestReading) {
-        timePoints.push({
-          time: timeFormat,
-          ph: closestReading.ph,
-          fullTime: currentDate.toLocaleString('es-PE', {
-            timeZone: 'America/Lima',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-          }),
-          rawDate: new Date(currentDate),
-          hasData: true
-        })
-      } else {
-        // Agregar punto sin datos para mostrar hueco en el gráfico
-        timePoints.push({
-          time: timeFormat,
-          ph: null,
-          fullTime: currentDate.toLocaleString('es-PE', {
-            timeZone: 'America/Lima',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-          }),
-          rawDate: new Date(currentDate),
-          hasData: false
-        })
-      }
-      
-      currentDate = new Date(currentDate.getTime() + interval)
-    }
-    
-    return timePoints
-  }
-
   const getTimeFormatForDate = (date: Date, filterType: string) => {
     switch (filterType) {
       case 'day':
@@ -207,36 +91,25 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
     }
   }
 
+  // Preparar datos del gráfico - usar datos exactos tal como están
+
   const chartData = (() => {
-    if (filterType === 'day' || filterType === 'week' || filterType === 'month') {
-      const completeRange = generateCompleteTimeRange(data, filterType)
-      console.log('📊 [GRÁFICO COMPLETO] Rango generado:', {
-        filterType,
-        originalDataPoints: data.length,
-        completeRangePoints: completeRange.length,
-        pointsWithData: completeRange.filter(p => p.hasData).length,
-        pointsWithoutData: completeRange.filter(p => !p.hasData).length,
-        firstPoint: completeRange[0]?.time,
-        lastPoint: completeRange[completeRange.length - 1]?.time
-      })
-      return completeRange
-    } else {
-      return data.map(reading => ({
-        time: getTimeFormat(reading),
-        ph: reading.ph,
-        fullTime: new Date(reading.created_at).toLocaleString('es-PE', {
-          timeZone: 'America/Lima',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        }),
-        rawDate: new Date(reading.created_at),
-        hasData: true
-      }))
-    }
+    // Siempre usar los datos tal como están, sin interpolación ni promediado
+    return data.map(reading => ({
+      time: getTimeFormat(reading),
+      ph: reading.ph,
+      fullTime: new Date(reading.created_at).toLocaleString('es-PE', {
+        timeZone: 'America/Lima',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }),
+      rawDate: new Date(reading.created_at),
+      hasData: true
+    }))
   })()
 
   // Calcular intervalo de ticks según la cantidad de datos y el tipo de filtro
@@ -254,15 +127,9 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
       return (
         <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
           <p className="text-sm text-gray-600">{`Hora: ${data.fullTime}`}</p>
-          {data.hasData ? (
-            <p className="text-sm font-semibold text-blue-600">
-              {`pH: ${payload[0].value.toFixed(2)}`}
-            </p>
-          ) : (
-            <p className="text-sm font-medium text-gray-500">
-              Sin datos disponibles
-            </p>
-          )}
+          <p className="text-sm font-semibold text-blue-600">
+            {`pH: ${payload[0].value.toFixed(2)}`}
+          </p>
         </div>
       )
     }
@@ -294,14 +161,8 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
             dataKey="ph" 
             stroke="#3b82f6" 
             strokeWidth={2}
-            dot={(props: any) => {
-              const { payload } = props
-              if (!payload?.hasData) {
-                return <circle cx={props.cx} cy={props.cy} r={3} fill="#e5e7eb" stroke="#9ca3af" strokeWidth={1} />
-              }
-              return <circle cx={props.cx} cy={props.cy} r={4} fill="#3b82f6" stroke="#3b82f6" strokeWidth={2} />
-            }}
-            activeDot={{ r: 6, fill: '#1d4ed8' }}
+            dot={false}
+            activeDot={{ r: 4, fill: '#1d4ed8' }}
             connectNulls={false}
           />
           {/* Líneas de referencia para niveles óptimos */}
@@ -330,12 +191,8 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
             Rango óptimo: 6.5 - 8.5 pH
           </div>
           <div className="flex items-center">
-            <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-            Con datos
-          </div>
-          <div className="flex items-center">
-            <span className="inline-block w-2 h-2 bg-gray-300 border border-gray-400 rounded-full mr-1"></span>
-            Sin datos
+            <span className="inline-block w-3 h-0.5 bg-blue-500 mr-1"></span>
+            Datos de pH ({data.length} puntos)
           </div>
         </div>
         {(filterType === 'day' || filterType === 'week' || filterType === 'month') && (
