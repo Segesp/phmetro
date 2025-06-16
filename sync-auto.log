@@ -1,0 +1,29 @@
+nohup: ignoring input
+🚀 Sincronización Automática Iniciada
+📅 Mon Jun 16 01:41:28 UTC 2025
+🔧 PID: 37746
+📝 Log: sync.log
+🛑 Para detener: kill 37746
+⏰ Intervalo: 30 segundos
+
+🔄 Sync #1 - 01:41:28
+✅ 3 nuevos registros
+⏸️  Esperando 30s...
+🔄 Sync #2 - 01:41:59
+✅ 1 nuevos registros
+⏸️  Esperando 30s...
+🔄 Sync #3 - 01:42:30
+✅ 1 nuevos registros
+⏸️  Esperando 30s...
+🔄 Sync #4 - 01:43:00
+✅ 1 nuevos registros
+⏸️  Esperando 30s...
+🔄 Sync #5 - 01:43:31
+✅ 2 nuevos registros
+⏸️  Esperando 30s...
+🔄 Sync #6 - 01:44:02
+✅ 2 nuevos registros
+⏸️  Esperando 30s...
+🔄 Sync #7 - 01:44:32
+✅ 1 nuevos registros
+⏸️  Esperando 30s...

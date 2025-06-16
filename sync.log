@@ -1,0 +1,31 @@
+nohup: ignoring input
+🚀 Iniciando sincronización automática ThingSpeak → Supabase
+📅 Mon Jun 16 01:39:08 UTC 2025
+⏰ Presiona Ctrl+C para detener
+
+🔄 Sincronización #1 - 01:39:08
+🔄 Iniciando sincronización ThingSpeak → Supabase
+📡 Consultando ThingSpeak...
+📊 Feeds encontrados: 20
+⏰ Último registro en Supabase: 2025-06-16T01:37:48.239Z
+📈 Datos nuevos para sincronizar: 4
+💾 Insertando en Supabase:
+  1. pH: 7, Time: 2025-06-16T01:37:51Z
+  2. pH: 7, Time: 2025-06-16T01:38:07Z
+  3. pH: 7, Time: 2025-06-16T01:38:36Z
+  4. pH: 7, Time: 2025-06-16T01:38:51Z
+✅ Sincronización exitosa: 4 registros guardados
+⏸️  Esperando 60 segundos...
+
+🔄 Sincronización #2 - 01:40:08
+🔄 Iniciando sincronización ThingSpeak → Supabase
+📡 Consultando ThingSpeak...
+📊 Feeds encontrados: 20
+⏰ Último registro en Supabase: 2025-06-16T01:39:08.905Z
+📈 Datos nuevos para sincronizar: 2
+💾 Insertando en Supabase:
+  1. pH: 7, Time: 2025-06-16T01:39:21Z
+  2. pH: 7, Time: 2025-06-16T01:39:51Z
+✅ Sincronización exitosa: 2 registros guardados
+⏸️  Esperando 60 segundos...
+
