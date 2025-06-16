@@ -18,7 +18,7 @@ export default function Dashboard() {
   const [dataSource, setDataSource] = useState<'supabase' | 'thingspeak' | 'both'>('both')
   
   // Estados para filtros
-  const [filterType, setFilterType] = useState<'all' | 'day' | 'week' | 'month'>('all')
+  const [filterType, setFilterType] = useState<'all' | 'day' | 'week' | 'month' | 'dayOfWeek' | 'monthOfYear'>('all')
   const [selectedDay, setSelectedDay] = useState<string>('')
   const [selectedMonth, setSelectedMonth] = useState<string>('')
 
@@ -34,17 +34,28 @@ export default function Dashboard() {
       
       switch (filterType) {
         case 'day':
+          // Últimas 24 horas
+          const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          return readingDate >= last24Hours
+          
+        case 'week':
+          // Últimos 7 días
+          const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          return readingDate >= last7Days
+          
+        case 'month':
+          // Últimos 30 días
+          const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          return readingDate >= last30Days
+          
+        case 'dayOfWeek':
+          // Filtrar por día específico de la semana
           if (!selectedDay) return true
           const dayOfWeek = readingDate.getDay() // 0 = Domingo, 1 = Lunes, etc.
           return dayOfWeek.toString() === selectedDay
           
-        case 'week':
-          const startOfWeek = new Date(now)
-          startOfWeek.setDate(now.getDate() - now.getDay())
-          startOfWeek.setHours(0, 0, 0, 0)
-          return readingDate >= startOfWeek
-          
-        case 'month':
+        case 'monthOfYear':
+          // Filtrar por mes específico del año
           if (!selectedMonth) return true
           const readingMonth = readingDate.getMonth() // 0 = Enero, 1 = Febrero, etc.
           return readingMonth.toString() === selectedMonth
@@ -211,16 +222,38 @@ export default function Dashboard() {
   const getFilterDescription = () => {
     switch (filterType) {
       case 'day':
+        return 'últimas 24 horas'
+      case 'week':
+        return 'últimos 7 días'
+      case 'month':
+        return 'últimos 30 días'
+      case 'dayOfWeek':
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
         return selectedDay ? days[parseInt(selectedDay)] : 'día seleccionado'
-      case 'week':
-        return 'esta semana'
-      case 'month':
+      case 'monthOfYear':
         const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
         return selectedMonth ? months[parseInt(selectedMonth)] : 'mes seleccionado'
       default:
         return 'todos'
+    }
+  }
+
+  const getDateRange = () => {
+    if (readings.length === 0) return null
+    
+    const sortedReadings = [...readings].sort((a, b) => 
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+    
+    const oldest = new Date(sortedReadings[0].created_at)
+    const newest = new Date(sortedReadings[sortedReadings.length - 1].created_at)
+    
+    return {
+      from: oldest.toLocaleDateString('es-ES'),
+      to: newest.toLocaleDateString('es-ES'),
+      fromTime: oldest.toLocaleString('es-ES'),
+      toTime: newest.toLocaleString('es-ES')
     }
   }
 
@@ -273,21 +306,23 @@ export default function Dashboard() {
                 <select
                   value={filterType}
                   onChange={(e) => {
-                    setFilterType(e.target.value as 'all' | 'day' | 'week' | 'month')
-                    if (e.target.value !== 'day') setSelectedDay('')
-                    if (e.target.value !== 'month') setSelectedMonth('')
+                    setFilterType(e.target.value as 'all' | 'day' | 'week' | 'month' | 'dayOfWeek' | 'monthOfYear')
+                    if (e.target.value !== 'dayOfWeek') setSelectedDay('')
+                    if (e.target.value !== 'monthOfYear') setSelectedMonth('')
                   }}
                   className="bg-white border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">📅 Todos</option>
-                  <option value="day">📆 Día de semana</option>
-                  <option value="week">📅 Esta semana</option>
-                  <option value="month">📅 Por mes</option>
+                  <option value="all">📅 Todos los datos</option>
+                  <option value="day">⏰ Últimas 24 horas</option>
+                  <option value="week">� Últimos 7 días</option>
+                  <option value="month">📊 Últimos 30 días</option>
+                  <option value="dayOfWeek">� Por día de semana</option>
+                  <option value="monthOfYear">�️ Por mes del año</option>
                 </select>
               </div>
 
               {/* Selector de día de la semana */}
-              {filterType === 'day' && (
+              {filterType === 'dayOfWeek' && (
                 <div className="flex items-center space-x-2">
                   <select
                     value={selectedDay}
@@ -307,7 +342,7 @@ export default function Dashboard() {
               )}
 
               {/* Selector de mes */}
-              {filterType === 'month' && (
+              {filterType === 'monthOfYear' && (
                 <div className="flex items-center space-x-2">
                   <select
                     value={selectedMonth}
@@ -427,13 +462,33 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2" />
-                  Gráfico de pH en Tiempo Real
-                  <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                    En Vivo
-                  </span>
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <TrendingUp className="h-5 w-5 mr-2" />
+                    Gráfico de pH en Tiempo Real
+                    <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                      En Vivo
+                    </span>
+                  </h3>
+                  
+                  {/* Indicador de filtro activo */}
+                  {filterType !== 'all' && (
+                    <div className="text-right">
+                      <div className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                        📊 {getFilterDescription()}
+                      </div>
+                      {getDateRange() && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {getDateRange()?.from === getDateRange()?.to ? 
+                            getDateRange()?.from : 
+                            `${getDateRange()?.from} - ${getDateRange()?.to}`
+                          }
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
                 <PhChart data={readings.slice(0, 50).reverse()} />
               </div>
             </div>
