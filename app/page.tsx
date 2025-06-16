@@ -121,7 +121,7 @@ export default function Dashboard() {
       filteredReadings: filtered.length
     })
     setReadings(filtered)
-  }, [allReadings, filterReadings])
+  }, [allReadings, filterReadings, filterType, selectedDay, selectedMonth])
 
   // Función para leer datos de ThingSpeak
   const fetchThingSpeakData = useCallback(async () => {

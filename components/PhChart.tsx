@@ -244,7 +244,7 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
             dataKey="ph" 
             stroke="#3b82f6" 
             strokeWidth={2}
-            dot={(props) => {
+            dot={(props: any) => {
               const { payload } = props
               if (!payload?.hasData) {
                 return <circle cx={props.cx} cy={props.cy} r={3} fill="#e5e7eb" stroke="#9ca3af" strokeWidth={1} />
