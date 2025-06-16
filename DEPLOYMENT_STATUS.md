@@ -29,7 +29,7 @@ npm run build
 
 #### Despliegue en Vercel
 - ✅ Build exitoso en Vercel
-- ✅ Aplicación desplegada: https://phmetro.vercel.app
+- ✅ Aplicación desplegada: https://phmetro-phi.vercel.app
 - ✅ Endpoints funcionando:
   - `/api/sync-thingspeak` - Sincronización automática
   - `/api/thingspeak-webhook` - Webhook directo
@@ -86,5 +86,5 @@ fix: Corregir orden de declaración de funciones - autoSyncThingSpeak después d
 ```
 
 **Estado**: ✅ COMPLETADO - Sistema totalmente funcional en producción
-**URL**: https://phmetro.vercel.app
+**URL**: https://phmetro-phi.vercel.app
 **Última actualización**: $(date '+%Y-%m-%d %H:%M:%S') UTC
