@@ -9,12 +9,59 @@ import { Activity, Droplets, TrendingUp, AlertTriangle, Database, RefreshCw, Wif
 
 export default function Dashboard() {
   const [readings, setReadings] = useState<PhReading[]>([])
+  const [allReadings, setAllReadings] = useState<PhReading[]>([]) // Todos los datos sin filtrar
   const [thingSpeakData, setThingSpeakData] = useState<PhReading[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPh, setCurrentPh] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<string>('')
   const [dataSource, setDataSource] = useState<'supabase' | 'thingspeak' | 'both'>('both')
+  
+  // Estados para filtros
+  const [filterType, setFilterType] = useState<'all' | 'day' | 'week' | 'month'>('all')
+  const [selectedDay, setSelectedDay] = useState<string>('')
+  const [selectedMonth, setSelectedMonth] = useState<string>('')
+
+  // Función para filtrar datos
+  const filterReadings = useCallback((data: PhReading[]) => {
+    if (filterType === 'all') {
+      return data
+    }
+
+    const now = new Date()
+    const filtered = data.filter(reading => {
+      const readingDate = new Date(reading.created_at)
+      
+      switch (filterType) {
+        case 'day':
+          if (!selectedDay) return true
+          const dayOfWeek = readingDate.getDay() // 0 = Domingo, 1 = Lunes, etc.
+          return dayOfWeek.toString() === selectedDay
+          
+        case 'week':
+          const startOfWeek = new Date(now)
+          startOfWeek.setDate(now.getDate() - now.getDay())
+          startOfWeek.setHours(0, 0, 0, 0)
+          return readingDate >= startOfWeek
+          
+        case 'month':
+          if (!selectedMonth) return true
+          const readingMonth = readingDate.getMonth() // 0 = Enero, 1 = Febrero, etc.
+          return readingMonth.toString() === selectedMonth
+          
+        default:
+          return true
+      }
+    })
+    
+    return filtered
+  }, [filterType, selectedDay, selectedMonth])
+
+  // Aplicar filtros cuando cambien
+  useEffect(() => {
+    const filtered = filterReadings(allReadings)
+    setReadings(filtered)
+  }, [allReadings, filterReadings])
 
   // Función para leer datos de ThingSpeak
   const fetchThingSpeakData = useCallback(async () => {
@@ -106,12 +153,12 @@ export default function Dashboard() {
       }
 
       if (combinedReadings.length > 0) {
-        setReadings(combinedReadings)
+        setAllReadings(combinedReadings) // Guardar todos los datos sin filtrar
         setCurrentPh(combinedReadings[0].ph)
         setLastUpdate(new Date().toLocaleString())
         console.log('✅ [DASHBOARD] Datos cargados exitosamente')
       } else {
-        setReadings([])
+        setAllReadings([])
         setCurrentPh(null)
         console.log('⚠️ [DASHBOARD] No hay datos disponibles')
       }
@@ -161,6 +208,22 @@ export default function Dashboard() {
     return { status: 'Crítico', class: 'ph-danger', color: 'text-red-600' }
   }
 
+  const getFilterDescription = () => {
+    switch (filterType) {
+      case 'day':
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+        return selectedDay ? days[parseInt(selectedDay)] : 'día seleccionado'
+      case 'week':
+        return 'esta semana'
+      case 'month':
+        const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+        return selectedMonth ? months[parseInt(selectedMonth)] : 'mes seleccionado'
+      default:
+        return 'todos'
+    }
+  }
+
   // Loading state
   if (loading) {
     return (
@@ -177,8 +240,8 @@ export default function Dashboard() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+          <div className="mb-4 lg:mb-0">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Dashboard pH Metro
             </h1>
@@ -187,21 +250,89 @@ export default function Dashboard() {
             </p>
           </div>
           
-          <div className="flex items-center space-x-4">
-            {/* Selector de fuente de datos */}
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Fuente:</label>
-              <select
-                value={dataSource}
-                onChange={(e) => setDataSource(e.target.value as 'supabase' | 'thingspeak' | 'both')}
-                className="bg-white border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="both">📊 Ambas fuentes</option>
-                <option value="supabase">🗄️ Supabase</option>
-                <option value="thingspeak">📡 ThingSpeak</option>
-              </select>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
+            {/* Primera fila de controles */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Selector de fuente de datos */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Fuente:</label>
+                <select
+                  value={dataSource}
+                  onChange={(e) => setDataSource(e.target.value as 'supabase' | 'thingspeak' | 'both')}
+                  className="bg-white border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="both">📊 Ambas fuentes</option>
+                  <option value="supabase">🗄️ Supabase</option>
+                  <option value="thingspeak">📡 ThingSpeak</option>
+                </select>
+              </div>
+
+              {/* Filtros de tiempo */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Filtro:</label>
+                <select
+                  value={filterType}
+                  onChange={(e) => {
+                    setFilterType(e.target.value as 'all' | 'day' | 'week' | 'month')
+                    if (e.target.value !== 'day') setSelectedDay('')
+                    if (e.target.value !== 'month') setSelectedMonth('')
+                  }}
+                  className="bg-white border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">📅 Todos</option>
+                  <option value="day">📆 Día de semana</option>
+                  <option value="week">📅 Esta semana</option>
+                  <option value="month">📅 Por mes</option>
+                </select>
+              </div>
+
+              {/* Selector de día de la semana */}
+              {filterType === 'day' && (
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={selectedDay}
+                    onChange={(e) => setSelectedDay(e.target.value)}
+                    className="bg-white border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Seleccionar día</option>
+                    <option value="0">🌅 Domingo</option>
+                    <option value="1">📝 Lunes</option>
+                    <option value="2">💼 Martes</option>
+                    <option value="3">🎯 Miércoles</option>
+                    <option value="4">🚀 Jueves</option>
+                    <option value="5">🎉 Viernes</option>
+                    <option value="6">🌟 Sábado</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Selector de mes */}
+              {filterType === 'month' && (
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="bg-white border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Seleccionar mes</option>
+                    <option value="0">❄️ Enero</option>
+                    <option value="1">💝 Febrero</option>
+                    <option value="2">🌸 Marzo</option>
+                    <option value="3">🌺 Abril</option>
+                    <option value="4">🌸 Mayo</option>
+                    <option value="5">☀️ Junio</option>
+                    <option value="6">🏖️ Julio</option>
+                    <option value="7">🌞 Agosto</option>
+                    <option value="8">🍂 Septiembre</option>
+                    <option value="9">🎃 Octubre</option>
+                    <option value="10">🦃 Noviembre</option>
+                    <option value="11">🎄 Diciembre</option>
+                  </select>
+                </div>
+              )}
             </div>
             
+            {/* Botón de actualizar */}
             <div className="text-right">
               <button
                 onClick={fetchReadings}
@@ -278,7 +409,8 @@ export default function Dashboard() {
                 ✅ Datos Reales
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {readings.length} lecturas disponibles
+                {readings.length} de {allReadings.length} lecturas 
+                {filterType !== 'all' && ` (${getFilterDescription()})`}
               </p>
             </div>
           </div>
@@ -325,7 +457,8 @@ export default function Dashboard() {
             <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg inline-block">
               <p className="font-medium">✅ Sistema Operativo</p>
               <p className="text-sm mt-1">
-                Mostrando {readings.length} lecturas reales de pH desde Supabase
+                Mostrando {readings.length} de {allReadings.length} lecturas de pH
+                {filterType !== 'all' && ` filtradas por ${getFilterDescription()}`}
               </p>
               <p className="text-xs text-green-600 mt-1">
                 Última lectura: {new Date(readings[0]?.created_at).toLocaleString()}
