@@ -128,9 +128,9 @@ export default function Dashboard() {
     console.log('📡 [THINGSPEAK] Consultando datos...')
     
     try {
-      // API de ThingSpeak con tu Read API Key
+      // API de ThingSpeak con tu Read API Key - TODOS los datos disponibles
       const response = await fetch(
-        'https://api.thingspeak.com/channels/2988488/fields/1.json?api_key=Z6SC5MLLP0FR4PC4&results=50',
+        'https://api.thingspeak.com/channels/2988488/fields/1.json?api_key=Z6SC5MLLP0FR4PC4&results=8000',
         { 
           method: 'GET',
           mode: 'cors',
@@ -177,21 +177,25 @@ export default function Dashboard() {
     setError(null)
     
     try {
-      // Consultar Supabase
+      // Consultar Supabase - TODOS los datos
       const { data, error } = await supabase
         .from('ph_readings')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50)
 
       console.log('📊 [DASHBOARD] Datos Supabase:', {
         success: !error,
         count: data?.length || 0,
-        firstRecord: data?.[0]
+        firstRecord: data?.[0],
+        message: `Cargados ${data?.length || 0} registros de Supabase (SIN LÍMITE)`
       })
 
       // Consultar ThingSpeak en paralelo
       const thingSpeakReadings = await fetchThingSpeakData()
+      console.log('📡 [DASHBOARD] Datos ThingSpeak:', {
+        count: thingSpeakReadings.length,
+        message: `Cargados ${thingSpeakReadings.length} registros de ThingSpeak`
+      })
 
       // Combinar datos según la fuente seleccionada
       let combinedReadings: PhReading[] = []
@@ -201,11 +205,10 @@ export default function Dashboard() {
       } else if (dataSource === 'thingspeak') {
         combinedReadings = thingSpeakReadings
       } else if (dataSource === 'both') {
-        // Combinar ambas fuentes
+        // Combinar ambas fuentes - TODOS los datos
         const supabaseData = data || []
         combinedReadings = [...supabaseData, ...thingSpeakReadings]
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .slice(0, 100)
       }
 
       if (error && dataSource !== 'thingspeak') {
@@ -216,11 +219,16 @@ export default function Dashboard() {
         setAllReadings(combinedReadings) // Guardar todos los datos sin filtrar
         setCurrentPh(combinedReadings[0].ph)
         setLastUpdate(new Date().toLocaleString())
-        console.log('✅ [DASHBOARD] Datos cargados exitosamente')
+        console.log('✅ [DASHBOARD] Datos cargados exitosamente:', {
+          total: combinedReadings.length,
+          supabase: dataSource === 'supabase' ? combinedReadings.length : (data?.length || 0),
+          thingspeak: dataSource === 'thingspeak' ? combinedReadings.length : thingSpeakReadings.length,
+          message: `TODOS LOS DATOS CARGADOS: ${combinedReadings.length} registros totales`
+        })
       } else {
         setAllReadings([])
         setCurrentPh(null)
-        console.log('⚠️ [DASHBOARD] No hay datos disponibles')
+        console.log('⚠️ [DASHBOARD] No hay datos disponibles en ninguna fuente')
       }
       
     } catch (err) {
@@ -246,7 +254,7 @@ export default function Dashboard() {
         (payload: any) => {
           console.log('📡 [DASHBOARD] Nuevo dato en tiempo real:', payload.new)
           const newReading = payload.new as PhReading
-          setReadings(prev => [newReading, ...prev].slice(0, 100))
+          setAllReadings(prev => [newReading, ...prev]) // Agregar a todos los datos
           setCurrentPh(newReading.ph)
           setLastUpdate(new Date().toLocaleString())
         }
