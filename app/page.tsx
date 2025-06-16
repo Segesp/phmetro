@@ -125,50 +125,6 @@ export default function Dashboard() {
     setReadings(filtered)
   }, [allReadings, filterReadings, filterType, selectedDay, selectedMonth])
 
-  // Función de sincronización automática ThingSpeak → Supabase
-  const autoSyncThingSpeak = useCallback(async () => {
-    try {
-      setAutoSyncStatus('syncing')
-      console.log('🔄 [AUTO-SYNC] Ejecutando sincronización automática...')
-      const response = await fetch('/api/sync-thingspeak', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const result = await response.json()
-      console.log('✅ [AUTO-SYNC] Sincronización completada:', result)
-      
-      setAutoSyncStatus('active')
-      setLastSyncTime(new Date().toLocaleString('es-PE', {
-        timeZone: 'America/Lima',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }))
-      
-      // Si se sincronizaron datos nuevos, refrescar
-      if (result.synced > 0) {
-        console.log(`🔄 [AUTO-SYNC] ${result.synced} nuevos registros sincronizados, refrescando datos...`)
-        fetchReadings()
-      }
-    } catch (error) {
-      console.error('❌ [AUTO-SYNC] Error en sincronización automática:', error)
-      setAutoSyncStatus('error')
-      setLastSyncTime(new Date().toLocaleString('es-PE', {
-        timeZone: 'America/Lima',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }))
-    }
-  }, [fetchReadings])
-
   // Función para leer datos de ThingSpeak
   const fetchThingSpeakData = useCallback(async () => {
     console.log('📡 [THINGSPEAK] Consultando datos...')
@@ -295,6 +251,42 @@ export default function Dashboard() {
       setLoading(false)
     }
   }, [dataSource, fetchThingSpeakData])
+
+  // Función de auto-sincronización ThingSpeak → Supabase
+  const autoSyncThingSpeak = useCallback(async () => {
+    try {
+      console.log('🔄 [AUTO-SYNC] Iniciando sincronización automática...')
+      setAutoSyncStatus('syncing')
+      
+      const response = await fetch('/api/sync-thingspeak', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('✅ [AUTO-SYNC] Sincronización exitosa:', result)
+        setAutoSyncStatus('active')
+        setLastSyncTime(new Date().toLocaleString('es-PE', {
+          timeZone: 'America/Lima',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }))
+        
+        // Refrescar datos después de la sincronización
+        fetchReadings()
+      } else {
+        console.error('❌ [AUTO-SYNC] Error en sincronización:', response.statusText)
+        setAutoSyncStatus('error')
+      }
+    } catch (error) {
+      console.error('❌ [AUTO-SYNC] Error de red:', error)
+      setAutoSyncStatus('error')
+    }
+  }, [fetchReadings])
 
   useEffect(() => {
     fetchReadings()
