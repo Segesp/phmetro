@@ -39,3 +39,21 @@ next-env.d.ts
 *.hex
 *.elf
 *.bin
+
+# Scripts de sincronización (solo para desarrollo local)
+backup/
+*.log
+cleanup-project.sh
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Scripts de sincronización (solo para desarrollo local)
+backup/
+*.log
+cleanup-project.sh
+
+# Archivos temporales
+*.tmp
+*.temp

@@ -1,15 +1,14 @@
-node_modules
-.next
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.log
-.DS_Store
-Thumbs.db
-sync-manual.js
-sync-intelligent.sh
-auto-sync.sh
-sync-control.sh
-*.md
+# Scripts de sincronización y desarrollo
 *.sh
+*.log
+backup/
+sync-manual.js
+supabase-*.sql
+
+# Archivos de configuración local
+.env.local
+.env.local.example
+phmetro.code-workspace
+
+# Archivos de desarrollo
+codigo_final.ino
