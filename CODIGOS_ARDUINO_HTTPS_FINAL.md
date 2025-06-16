@@ -9,7 +9,7 @@
 ✅ Host: esp8266-phmetro-proxy.20200205.workers.dev
 ✅ Proxy a Vercel via Cloudflare Worker
 ✅ Gestión completa de errores
-✅ Diagnósticos avanzadosssssssssssss
+✅ Diagnósticos avanzados
 ```
 
 ### 2. 🔧 **ULTRA SIMPLE (BACKUP)**
