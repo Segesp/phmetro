@@ -10,46 +10,54 @@ interface PhChartProps {
 
 export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
   const getTimeFormat = (reading: PhReading) => {
+    // Convertir a zona horaria de Perú (UTC-5)
     const date = new Date(reading.created_at)
+    const peruDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Lima"}))
     
     switch (filterType) {
       case 'day':
         // Para 24 horas: mostrar hora:minuto
-        return date.toLocaleTimeString('es-ES', {
+        return peruDate.toLocaleTimeString('es-PE', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZone: 'America/Lima'
         })
       case 'week':
         // Para 7 días: mostrar día y hora
-        return date.toLocaleDateString('es-ES', {
+        return peruDate.toLocaleDateString('es-PE', {
           weekday: 'short',
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZone: 'America/Lima'
         })
       case 'month':
         // Para 30 días: mostrar día/mes
-        return date.toLocaleDateString('es-ES', {
+        return peruDate.toLocaleDateString('es-PE', {
           day: '2-digit',
-          month: '2-digit'
+          month: '2-digit',
+          timeZone: 'America/Lima'
         })
       case 'dayOfWeek':
         // Para día específico: mostrar fecha y hora
-        return date.toLocaleDateString('es-ES', {
+        return peruDate.toLocaleDateString('es-PE', {
           day: '2-digit',
           month: '2-digit',
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZone: 'America/Lima'
         })
       case 'monthOfYear':
         // Para mes específico: mostrar día
-        return date.toLocaleDateString('es-ES', {
-          day: '2-digit'
+        return peruDate.toLocaleDateString('es-PE', {
+          day: '2-digit',
+          timeZone: 'America/Lima'
         })
       default:
         // Por defecto: hora:minuto
-        return date.toLocaleTimeString('es-ES', {
+        return peruDate.toLocaleTimeString('es-PE', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZone: 'America/Lima'
         })
     }
   }
@@ -57,7 +65,10 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
   const generateCompleteTimeRange = (data: PhReading[], filterType: string) => {
     if (data.length === 0) return []
     
-    const now = new Date()
+    // Obtener la fecha actual en zona horaria de Perú
+    const nowUTC = new Date()
+    const now = new Date(nowUTC.toLocaleString("en-US", {timeZone: "America/Lima"}))
+    
     let startDate: Date
     let interval: number
     let timeUnit: 'hour' | 'day' | 'month'
@@ -88,7 +99,15 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
         return data.map(reading => ({
           time: getTimeFormat(reading),
           ph: reading.ph,
-          fullTime: new Date(reading.created_at).toLocaleString('es-ES'),
+          fullTime: new Date(reading.created_at).toLocaleString('es-PE', {
+            timeZone: 'America/Lima',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          }),
           rawDate: new Date(reading.created_at),
           hasData: true
         }))
@@ -120,7 +139,15 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
         timePoints.push({
           time: timeFormat,
           ph: matchingReading.ph,
-          fullTime: currentDate.toLocaleString('es-ES'),
+          fullTime: currentDate.toLocaleString('es-PE', {
+            timeZone: 'America/Lima',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          }),
           rawDate: new Date(currentDate),
           hasData: true
         })
@@ -128,7 +155,15 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
         timePoints.push({
           time: timeFormat,
           ph: null,
-          fullTime: currentDate.toLocaleString('es-ES'),
+          fullTime: currentDate.toLocaleString('es-PE', {
+            timeZone: 'America/Lima',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          }),
           rawDate: new Date(currentDate),
           hasData: false
         })
@@ -141,26 +176,33 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
   }
 
   const getTimeFormatForDate = (date: Date, filterType: string) => {
+    // Convertir a zona horaria de Perú
+    const peruDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Lima"}))
+    
     switch (filterType) {
       case 'day':
-        return date.toLocaleTimeString('es-ES', {
+        return peruDate.toLocaleTimeString('es-PE', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZone: 'America/Lima'
         })
       case 'week':
-        return date.toLocaleDateString('es-ES', {
+        return peruDate.toLocaleDateString('es-PE', {
           weekday: 'short',
-          day: '2-digit'
+          day: '2-digit',
+          timeZone: 'America/Lima'
         })
       case 'month':
-        return date.toLocaleDateString('es-ES', {
+        return peruDate.toLocaleDateString('es-PE', {
           day: '2-digit',
-          month: '2-digit'
+          month: '2-digit',
+          timeZone: 'America/Lima'
         })
       default:
-        return date.toLocaleTimeString('es-ES', {
+        return peruDate.toLocaleTimeString('es-PE', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZone: 'America/Lima'
         })
     }
   }
@@ -182,7 +224,15 @@ export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
       return data.map(reading => ({
         time: getTimeFormat(reading),
         ph: reading.ph,
-        fullTime: new Date(reading.created_at).toLocaleString('es-ES'),
+        fullTime: new Date(reading.created_at).toLocaleString('es-PE', {
+          timeZone: 'America/Lima',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }),
         rawDate: new Date(reading.created_at),
         hasData: true
       }))

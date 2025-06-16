@@ -218,7 +218,15 @@ export default function Dashboard() {
       if (combinedReadings.length > 0) {
         setAllReadings(combinedReadings) // Guardar todos los datos sin filtrar
         setCurrentPh(combinedReadings[0].ph)
-        setLastUpdate(new Date().toLocaleString())
+        setLastUpdate(new Date().toLocaleString('es-PE', {
+          timeZone: 'America/Lima',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }))
         console.log('✅ [DASHBOARD] Datos cargados exitosamente:', {
           total: combinedReadings.length,
           supabase: dataSource === 'supabase' ? combinedReadings.length : (data?.length || 0),
@@ -256,7 +264,15 @@ export default function Dashboard() {
           const newReading = payload.new as PhReading
           setAllReadings(prev => [newReading, ...prev]) // Agregar a todos los datos
           setCurrentPh(newReading.ph)
-          setLastUpdate(new Date().toLocaleString())
+          setLastUpdate(new Date().toLocaleString('es-PE', {
+            timeZone: 'America/Lima',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          }))
         }
       )
       .subscribe()
@@ -586,7 +602,15 @@ export default function Dashboard() {
                 {filterType !== 'all' && ` filtradas por ${getFilterDescription()}`}
               </p>
               <p className="text-xs text-green-600 mt-1">
-                Última lectura: {new Date(readings[0]?.created_at).toLocaleString()}
+                Última lectura: {new Date(readings[0]?.created_at).toLocaleString('es-PE', {
+                  timeZone: 'America/Lima',
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })} (Hora de Perú)
               </p>
             </div>
           </div>
