@@ -24,7 +24,15 @@ export default function Dashboard() {
 
   // Función para filtrar datos
   const filterReadings = useCallback((data: PhReading[]) => {
+    console.log('🔍 [FILTRO] Iniciando filtrado:', {
+      filterType,
+      selectedDay,
+      selectedMonth,
+      totalData: data.length
+    })
+
     if (filterType === 'all') {
+      console.log('✅ [FILTRO] Mostrando todos los datos:', data.length)
       return data
     }
 
@@ -36,41 +44,68 @@ export default function Dashboard() {
         case 'day':
           // Últimas 24 horas
           const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-          return readingDate >= last24Hours
+          const dayMatch = readingDate >= last24Hours
+          if (dayMatch) console.log('✅ [FILTRO] Día válido:', readingDate.toLocaleString())
+          return dayMatch
           
         case 'week':
           // Últimos 7 días
           const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          return readingDate >= last7Days
+          const weekMatch = readingDate >= last7Days
+          if (weekMatch) console.log('✅ [FILTRO] Semana válida:', readingDate.toLocaleString())
+          return weekMatch
           
         case 'month':
           // Últimos 30 días
           const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-          return readingDate >= last30Days
+          const monthMatch = readingDate >= last30Days
+          if (monthMatch) console.log('✅ [FILTRO] Mes válido:', readingDate.toLocaleString())
+          return monthMatch
           
         case 'dayOfWeek':
           // Filtrar por día específico de la semana
           if (!selectedDay) return true
           const dayOfWeek = readingDate.getDay() // 0 = Domingo, 1 = Lunes, etc.
-          return dayOfWeek.toString() === selectedDay
+          const dayOfWeekMatch = dayOfWeek.toString() === selectedDay
+          if (dayOfWeekMatch) console.log('✅ [FILTRO] Día de semana válido:', readingDate.toLocaleString(), 'día:', dayOfWeek)
+          return dayOfWeekMatch
           
         case 'monthOfYear':
           // Filtrar por mes específico del año
           if (!selectedMonth) return true
           const readingMonth = readingDate.getMonth() // 0 = Enero, 1 = Febrero, etc.
-          return readingMonth.toString() === selectedMonth
+          const monthOfYearMatch = readingMonth.toString() === selectedMonth
+          if (monthOfYearMatch) console.log('✅ [FILTRO] Mes del año válido:', readingDate.toLocaleString(), 'mes:', readingMonth)
+          return monthOfYearMatch
           
         default:
           return true
       }
     })
     
-    return filtered
+    // Ordenar por fecha descendente
+    const sorted = filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    
+    console.log('📊 [FILTRO] Resultado final:', {
+      filterType,
+      original: data.length,
+      filtered: filtered.length,
+      sorted: sorted.length
+    })
+    
+    return sorted
   }, [filterType, selectedDay, selectedMonth])
 
   // Aplicar filtros cuando cambien
   useEffect(() => {
     const filtered = filterReadings(allReadings)
+    console.log('🔍 [FILTROS] Aplicando filtros:', {
+      filterType,
+      selectedDay,
+      selectedMonth,
+      totalReadings: allReadings.length,
+      filteredReadings: filtered.length
+    })
     setReadings(filtered)
   }, [allReadings, filterReadings])
 
@@ -489,7 +524,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 
-                <PhChart data={readings.slice(0, 50).reverse()} />
+                <PhChart data={readings.slice(0, 100).reverse()} />
               </div>
             </div>
             
