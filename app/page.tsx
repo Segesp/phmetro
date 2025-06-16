@@ -37,6 +37,8 @@ export default function Dashboard() {
     }
 
     const now = new Date()
+    console.log('📅 [FILTRO] Fecha actual:', now.toLocaleString())
+
     const filtered = data.filter(reading => {
       const readingDate = new Date(reading.created_at)
       
@@ -45,21 +47,33 @@ export default function Dashboard() {
           // Últimas 24 horas
           const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
           const dayMatch = readingDate >= last24Hours
-          if (dayMatch) console.log('✅ [FILTRO] Día válido:', readingDate.toLocaleString())
+          console.log('⏰ [FILTRO DÍA] Verificando:', {
+            readingDate: readingDate.toLocaleString(),
+            last24Hours: last24Hours.toLocaleString(),
+            match: dayMatch
+          })
           return dayMatch
           
         case 'week':
           // Últimos 7 días
           const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
           const weekMatch = readingDate >= last7Days
-          if (weekMatch) console.log('✅ [FILTRO] Semana válida:', readingDate.toLocaleString())
+          console.log('📅 [FILTRO SEMANA] Verificando:', {
+            readingDate: readingDate.toLocaleString(),
+            last7Days: last7Days.toLocaleString(),
+            match: weekMatch
+          })
           return weekMatch
           
         case 'month':
           // Últimos 30 días
           const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
           const monthMatch = readingDate >= last30Days
-          if (monthMatch) console.log('✅ [FILTRO] Mes válido:', readingDate.toLocaleString())
+          console.log('📊 [FILTRO MES] Verificando:', {
+            readingDate: readingDate.toLocaleString(),
+            last30Days: last30Days.toLocaleString(),
+            match: monthMatch
+          })
           return monthMatch
           
         case 'dayOfWeek':
@@ -524,17 +538,20 @@ export default function Dashboard() {
                   )}
                 </div>
                 
-                <PhChart data={(() => {
-                  const chartData = readings.slice().reverse()
-                  console.log('📊 [GRÁFICO] Datos para el gráfico:', {
-                    filterType,
-                    totalFilteredReadings: readings.length,
-                    chartDataLength: chartData.length,
-                    firstDate: chartData[0]?.created_at,
-                    lastDate: chartData[chartData.length - 1]?.created_at
-                  })
-                  return chartData
-                })()} />
+                <PhChart 
+                  data={(() => {
+                    const chartData = readings.slice().reverse()
+                    console.log('📊 [GRÁFICO] Datos para el gráfico:', {
+                      filterType,
+                      totalFilteredReadings: readings.length,
+                      chartDataLength: chartData.length,
+                      firstDate: chartData[0]?.created_at,
+                      lastDate: chartData[chartData.length - 1]?.created_at
+                    })
+                    return chartData
+                  })()} 
+                  filterType={filterType}
+                />
               </div>
             </div>
             

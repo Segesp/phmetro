@@ -5,17 +5,70 @@ import { PhReading } from '@/lib/supabase'
 
 interface PhChartProps {
   data: PhReading[]
+  filterType?: 'all' | 'day' | 'week' | 'month' | 'dayOfWeek' | 'monthOfYear'
 }
 
-export default function PhChart({ data }: PhChartProps) {
+export default function PhChart({ data, filterType = 'all' }: PhChartProps) {
+  const getTimeFormat = (reading: PhReading) => {
+    const date = new Date(reading.created_at)
+    
+    switch (filterType) {
+      case 'day':
+        // Para 24 horas: mostrar hora:minuto
+        return date.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      case 'week':
+        // Para 7 días: mostrar día y hora
+        return date.toLocaleDateString('es-ES', {
+          weekday: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      case 'month':
+        // Para 30 días: mostrar día/mes
+        return date.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit'
+        })
+      case 'dayOfWeek':
+        // Para día específico: mostrar fecha y hora
+        return date.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      case 'monthOfYear':
+        // Para mes específico: mostrar día
+        return date.toLocaleDateString('es-ES', {
+          day: '2-digit'
+        })
+      default:
+        // Por defecto: hora:minuto
+        return date.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+    }
+  }
+
   const chartData = data.map(reading => ({
-    time: new Date(reading.created_at).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit'
-    }),
+    time: getTimeFormat(reading),
     ph: reading.ph,
-    fullTime: new Date(reading.created_at).toLocaleString('es-ES')
+    fullTime: new Date(reading.created_at).toLocaleString('es-ES'),
+    rawDate: new Date(reading.created_at)
   }))
+
+  // Calcular intervalo de ticks según la cantidad de datos y el tipo de filtro
+  const getTickInterval = () => {
+    const dataLength = chartData.length
+    if (dataLength <= 10) return 0 // Mostrar todos
+    if (dataLength <= 50) return Math.ceil(dataLength / 10)
+    if (dataLength <= 100) return Math.ceil(dataLength / 8)
+    return Math.ceil(dataLength / 6)
+  }
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -41,6 +94,10 @@ export default function PhChart({ data }: PhChartProps) {
             dataKey="time" 
             stroke="#666"
             fontSize={12}
+            interval={getTickInterval()}
+            angle={filterType === 'week' || filterType === 'month' ? -45 : 0}
+            textAnchor={filterType === 'week' || filterType === 'month' ? 'end' : 'middle'}
+            height={filterType === 'week' || filterType === 'month' ? 60 : 40}
           />
           <YAxis 
             domain={[0, 14]}
