@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       .from('ph_readings')
       .select('id')
       .eq('device', 'ThingSpeak')
-      .eq('timestamp', timestamp)
+      .eq('created_at', timestamp)
       .limit(1)
     
     if (existing && existing.length > 0) {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     // Preparar datos para Supabase
     const recordToInsert = {
       ph: ph,
-      timestamp: timestamp,
+      created_at: timestamp,
       device: 'ThingSpeak'
     }
     
