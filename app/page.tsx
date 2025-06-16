@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<string>('')
   const [dataSource, setDataSource] = useState<'supabase' | 'thingspeak' | 'both'>('both')
+  const [autoSyncStatus, setAutoSyncStatus] = useState<'active' | 'syncing' | 'error'>('active')
+  const [lastSyncTime, setLastSyncTime] = useState<string>('')
   
   // Estados para filtros
   const [filterType, setFilterType] = useState<'all' | 'day' | 'week' | 'month' | 'dayOfWeek' | 'monthOfYear'>('all')
@@ -122,6 +124,50 @@ export default function Dashboard() {
     })
     setReadings(filtered)
   }, [allReadings, filterReadings, filterType, selectedDay, selectedMonth])
+
+  // Función de sincronización automática ThingSpeak → Supabase
+  const autoSyncThingSpeak = useCallback(async () => {
+    try {
+      setAutoSyncStatus('syncing')
+      console.log('🔄 [AUTO-SYNC] Ejecutando sincronización automática...')
+      const response = await fetch('/api/sync-thingspeak', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      console.log('✅ [AUTO-SYNC] Sincronización completada:', result)
+      
+      setAutoSyncStatus('active')
+      setLastSyncTime(new Date().toLocaleString('es-PE', {
+        timeZone: 'America/Lima',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }))
+      
+      // Si se sincronizaron datos nuevos, refrescar
+      if (result.synced > 0) {
+        console.log(`🔄 [AUTO-SYNC] ${result.synced} nuevos registros sincronizados, refrescando datos...`)
+        fetchReadings()
+      }
+    } catch (error) {
+      console.error('❌ [AUTO-SYNC] Error en sincronización automática:', error)
+      setAutoSyncStatus('error')
+      setLastSyncTime(new Date().toLocaleString('es-PE', {
+        timeZone: 'America/Lima',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }))
+    }
+  }, [fetchReadings])
 
   // Función para leer datos de ThingSpeak
   const fetchThingSpeakData = useCallback(async () => {
@@ -279,12 +325,20 @@ export default function Dashboard() {
 
     // Auto-refresh cada 30 segundos
     const interval = setInterval(fetchReadings, 30000)
+    
+    // Auto-sincronización ThingSpeak → Supabase cada 2 minutos
+    const syncInterval = setInterval(autoSyncThingSpeak, 120000) // 2 minutos
+    
+    // Ejecutar sincronización inicial después de 5 segundos
+    const initialSyncTimeout = setTimeout(autoSyncThingSpeak, 5000)
 
     return () => {
       subscription.unsubscribe()
       clearInterval(interval)
+      clearInterval(syncInterval)
+      clearTimeout(initialSyncTimeout)
     }
-  }, [fetchReadings, fetchThingSpeakData])
+  }, [fetchReadings, fetchThingSpeakData, autoSyncThingSpeak])
 
   const getPhStatus = (ph: number) => {
     if (ph >= 6.5 && ph <= 8.5) return { status: 'Óptimo', class: 'ph-safe', color: 'text-green-600' }
@@ -454,6 +508,20 @@ export default function Dashboard() {
                 <p className="text-xs text-gray-500 mt-1">
                   Última actualización: {lastUpdate}
                 </p>
+              )}
+              {lastSyncTime && (
+                <div className="flex items-center space-x-1 mt-1">
+                  <div className={`w-2 h-2 rounded-full ${
+                    autoSyncStatus === 'active' ? 'bg-green-500' :
+                    autoSyncStatus === 'syncing' ? 'bg-yellow-500 animate-pulse' :
+                    'bg-red-500'
+                  }`}></div>
+                  <p className="text-xs text-gray-500">
+                    Auto-sync: {lastSyncTime}
+                    {autoSyncStatus === 'syncing' && ' (sincronizando...)'}
+                    {autoSyncStatus === 'error' && ' (error)'}
+                  </p>
+                </div>
               )}
             </div>
           </div>
