@@ -524,7 +524,17 @@ export default function Dashboard() {
                   )}
                 </div>
                 
-                <PhChart data={readings.slice(0, 100).reverse()} />
+                <PhChart data={(() => {
+                  const chartData = readings.slice().reverse()
+                  console.log('📊 [GRÁFICO] Datos para el gráfico:', {
+                    filterType,
+                    totalFilteredReadings: readings.length,
+                    chartDataLength: chartData.length,
+                    firstDate: chartData[0]?.created_at,
+                    lastDate: chartData[chartData.length - 1]?.created_at
+                  })
+                  return chartData
+                })()} />
               </div>
             </div>
             
