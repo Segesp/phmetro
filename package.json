@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.5",
+    "@supabase/supabase-js": "^2.50.0",
     "@tailwindcss/forms": "^0.5.7",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
