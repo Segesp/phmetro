@@ -14,7 +14,8 @@
  */
 
 // Configuración del endpoint de Vercel
-const VERCEL_ENDPOINT = 'https://phmetro-phi.vercel.app/api/ph-proxy';
+const VERCEL_ENDPOINT = 'https://phmetro-phi.vercel.app/api/emergency-ph'; // TEMPORAL: usando endpoint de emergencia
+const BACKUP_ENDPOINT = 'https://phmetro-phi.vercel.app/api/ph-proxy';
 
 // Headers CORS para permitir peticiones desde cualquier origen
 const CORS_HEADERS = {
