@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     
     const recordsToInsert = newFeeds.map((feed: any) => ({
       ph: parseFloat(feed.field1 || '0'),
-      timestamp: feed.created_at,
+      created_at: feed.created_at,
       device: 'ThingSpeak'
     }))
     
