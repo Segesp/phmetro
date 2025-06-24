@@ -647,7 +647,7 @@ export default function Dashboard() {
                   )}
                   {currentPh >= 6.5 && currentPh <= 8.5 && (
                     <p className="text-green-700 font-medium">
-                      ✅ Agua en condiciones óptimas para consumo.
+                      ✅ Agua en condiciones óptimas.
                     </p>
                   )}
                 </div>
